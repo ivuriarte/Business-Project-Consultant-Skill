@@ -53,7 +53,7 @@ _VAGUE_PHRASES = ("i don't know", "i do not know", "not sure", "idk", "n/a", "na
 
 def nudge_if_vague(text: str) -> str:
     """Non-blocking nudge when an answer looks too short or vague."""
-    is_short = len(text.strip()) < 15
+    is_short = len(text.strip()) < 10
     is_vague = any(phrase in text.lower() for phrase in _VAGUE_PHRASES)
     if is_short or is_vague:
         print(f"\n{C.YELLOW}  ⚠ That's a bit short — can you be more specific?{C.RESET}")
@@ -62,6 +62,29 @@ def nudge_if_vague(text: str) -> str:
         if better:
             return better
     return text
+
+
+# ─── Pipeline Context Loader ─────────────────────────────────────────────────
+def load_requirements_prefill(path: str) -> dict:
+    """Load project context from a requirements JSON for pre-filling intake prompts."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"\n{C.RED}⚠ Requirements file not found: {path}{C.RESET}")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"\n{C.RED}⚠ Could not parse requirements file: {e}{C.RESET}")
+        return {}
+
+    # Use the first Business requirement as the problem statement
+    brs = [r for r in data.get("requirements", []) if r.get("type") == "Business"]
+    problem = brs[0].get("description", "") if brs else data.get("context", "")
+    return {
+        "name":        data.get("project", ""),
+        "problem":     problem,
+        "target_user": data.get("target_users", ""),
+    }
 
 
 # ─── Data Models ────────────────────────────────────────────────────────────
@@ -169,19 +192,31 @@ class Project:
 
 
 # ─── Intake Wizard ──────────────────────────────────────────────────────────
-def intake_project() -> Project:
+def intake_project(prefill: Optional[dict] = None) -> Project:
     header("STEP 1 OF 5 — IDEA INTAKE")
     info(
         "Before we build a backlog, we need to understand the idea.\n"
         "Answer each question honestly. Vague answers = vague backlog."
     )
 
-    name = prompt("What is the name of this app or project?")
-    problem = nudge_if_vague(prompt(
-        "What problem does this solve?\n  (e.g. 'Freelancers lose track of client invoices')"
+    def _ask(text: str, key: str) -> str:
+        """Show a pre-filled default from requirements_elicitor.py output if available."""
+        default = (prefill or {}).get(key, "")
+        if default:
+            print(f"\n{C.YELLOW}▶ {text}{C.RESET}")
+            print(f"  {C.DIM}Loaded from requirements: \"{default}\"{C.RESET}")
+            override = input("  Press Enter to use this, or type to override: ").strip()
+            return override if override else default
+        return prompt(text)
+
+    name = _ask("What is the name of this app or project?", "name")
+    problem = nudge_if_vague(_ask(
+        "What problem does this solve?\n  (e.g. 'Freelancers lose track of client invoices')",
+        "problem"
     ))
-    target_user = prompt(
-        "Who is the primary user?\n  (e.g. 'Freelance designers aged 25-40 who work remotely')"
+    target_user = _ask(
+        "Who is the primary user?\n  (e.g. 'Freelance designers aged 25-40 who work remotely')",
+        "target_user"
     )
     success_definition = prompt(
         "What does success look like in 90 days?\n  (e.g. '100 active users, avg 3 invoices/week sent')"
@@ -230,20 +265,29 @@ def score_prompt(label: str) -> int:
 
 def collect_ac(story: UserStory) -> None:
     header(f"ACCEPTANCE CRITERIA for {story.story_id}")
+    _action_hint  = story.action[:45] + ("..." if len(story.action) > 45 else "")
+    _outcome_hint = story.outcome[:55] + ("..." if len(story.outcome) > 55 else "")
     info(
-        "Write at least 1 acceptance criterion using GIVEN / WHEN / THEN.\n"
-        "Type 'done' at the GIVEN prompt to finish this story."
+        "Acceptance criteria define exactly when a feature is 'done'.\n"
+        "Write one test scenario per criterion using GIVEN / WHEN / THEN.\n\n"
+        "  GIVEN = the starting condition    e.g. 'I am on the login page'\n"
+        "  WHEN  = the action taken          e.g. 'I click the Submit button'\n"
+        "  THEN  = the expected result       e.g. 'I see a success confirmation'\n\n"
+        f"Suggested first criterion for '{_action_hint}':\n"
+        f"  GIVEN → the {story.actor} is ready\n"
+        f"  WHEN  → they {_action_hint}\n"
+        f"  THEN  → {_outcome_hint}"
     )
     idx = 1
     while True:
-        given = prompt(f"AC #{idx} — GIVEN (or type 'done' to finish)")
+        given = prompt(f"AC #{idx} — GIVEN  (e.g. 'I am on the login page') — type 'done' to finish")
         if given.lower() == "done":
             if not story.ac:
                 print(f"{C.RED}  At least one AC is required.{C.RESET}")
                 continue
             break
-        when = prompt(f"AC #{idx} — WHEN")
-        then = prompt(f"AC #{idx} — THEN")
+        when = prompt(f"AC #{idx} — WHEN   (e.g. 'I click the Submit button')")
+        then = prompt(f"AC #{idx} — THEN   (e.g. 'I see the expected result')")
         story.ac.append(AcceptanceCriteria(given, when, then))
         success(f"AC #{idx} added.")
         idx += 1
@@ -549,7 +593,7 @@ def confirm_phases(project: Project) -> None:
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
-def main():
+def main(prefill: Optional[dict] = None):
     print(f"\n{C.BOLD}{C.CYAN}{'═' * 60}")
     print("  BUSINESS AND PROJECT CONSULTANT")
     print("  Idea → Backlog → Developer Prompts")
@@ -561,10 +605,16 @@ def main():
         "Estimated time: 10–20 minutes depending on scope."
     )
 
-    project = intake_project()
+    project = intake_project(prefill)
     collect_epics(project)
     confirm_phases(project)
     print_summary(project)
+
+    answer = prompt("\nReady to save your backlog? (yes to save / no to exit without saving)")
+    if answer.lower() not in ("yes", "y"):
+        print(f"\n{C.YELLOW}⚠ Save cancelled. Run the script again to start over.{C.RESET}\n")
+        sys.exit(0)
+
     save_outputs(project)
 
     header("DONE")
@@ -583,9 +633,22 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {SKILL_VERSION}")
-    parser.parse_args()
+    parser.add_argument(
+        "--from-requirements",
+        metavar="FILE",
+        help=(
+            "Path to a requirements JSON file (from requirements_elicitor.py). "
+            "Pre-fills project name, problem statement, and target user so you don't re-type them."
+        ),
+    )
+    args = parser.parse_args()
+    prefill: Optional[dict] = None
+    if args.from_requirements:
+        prefill = load_requirements_prefill(args.from_requirements)
+        if prefill:
+            print(f"\n{C.GREEN}✓ Loaded context from: {args.from_requirements}{C.RESET}")
     try:
-        main()
+        main(prefill=prefill)
     except KeyboardInterrupt:
         print(f"\n\n{C.YELLOW}⚠ Wizard cancelled. No files were saved.{C.RESET}\n")
         sys.exit(0)

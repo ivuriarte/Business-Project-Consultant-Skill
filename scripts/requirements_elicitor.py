@@ -57,7 +57,7 @@ _VAGUE_PHRASES = ("i don't know", "i do not know", "not sure", "idk", "n/a", "na
 
 def nudge_if_vague(text: str) -> str:
     """Non-blocking nudge when an answer looks too short or vague."""
-    is_short = len(text.strip()) < 15
+    is_short = len(text.strip()) < 10
     is_vague = any(phrase in text.lower() for phrase in _VAGUE_PHRASES)
     if is_short or is_vague:
         print(f"\n{C.YELLOW}  ⚠ That's a bit short — can you be more specific?{C.RESET}")
@@ -661,11 +661,19 @@ def main():
     elicit_out_of_scope(session)
     elicit_stakeholders(session)
     print_summary(session)
+    answer = ask(
+        "\nReady to save your requirements document? (yes to save / no to exit without saving)"
+    )
+    if answer.lower() not in ("yes", "y"):
+        print(f"\n{C.YELLOW}⚠ Save cancelled. Run the script again to start over.{C.RESET}\n")
+        sys.exit(0)
     save_outputs(session)
 
     header("DONE")
     print(f"\n  Your requirements document is ready for stakeholder review.")
-    print(f"  Next step: Run idea_to_backlog.py to convert these requirements into a backlog.\n")
+    print(f"  Next step: run idea_to_backlog.py to convert these requirements into a backlog.\n")
+    print(f"  Tip — pass your JSON output to skip re-entering project context:")
+    print(f"  python3 scripts/idea_to_backlog.py --from-requirements <your-requirements-file>.json\n")
 
 
 if __name__ == "__main__":

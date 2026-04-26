@@ -186,24 +186,61 @@ def effort_days(effort: str) -> float:
     return EFFORT_MAP.get(effort.lower().strip(), 3)
 
 
-# ─── Intake ──────────────────────────────────────────────────────────────────
-def intake_plan(plan: ProjectPlan) -> None:
+# ─── Pipeline Context Loader ──────────────────────────────────────────────────
+def load_backlog_prefill(path: str) -> dict:
+    """Load project context from a backlog JSON for pre-filling intake and phase building."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"\n{C.RED}⚠ Backlog file not found: {path}{C.RESET}")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"\n{C.RED}⚠ Could not parse backlog file: {e}{C.RESET}")
+        return {}
+
+    stories_by_phase: Dict[str, list] = {}
+    for epic in data.get("epics", []):
+        for story in epic.get("stories", []):
+            phase = story.get("phase", "Unknown")
+            stories_by_phase.setdefault(phase, []).append(story)
+
+    raw_stack = data.get("tech_stack", "")
+    return {
+        "name":             data.get("project", ""),
+        "tech_stack":       raw_stack if raw_stack not in ("", "Not specified") else "",
+        "stories_by_phase": stories_by_phase,
+    }
+
+
+# ─── Intake ────────────────────────────────────────────────────────────────
+def intake_plan(plan: ProjectPlan, prefill: Optional[dict] = None) -> None:
     header("PROJECT PLAN — INTAKE")
 
-    plan.project_name = ask("What is the name of this project?")
+    def _ask(text: str, key: str) -> str:
+        """Show a pre-filled default from idea_to_backlog.py output if available."""
+        default = (prefill or {}).get(key, "")
+        if default:
+            print(f"\n{C.YELLOW}▶ {text}{C.RESET}")
+            print(f"  {C.DIM}Loaded from backlog: \"{default}\"{C.RESET}")
+            override = input("  Press Enter to use this, or type to override: ").strip()
+            return override if override else default
+        return ask(text)
+
+    plan.project_name = _ask("What is the name of this project?", "name")
     start             = ask("What is the planned start date? (YYYY-MM-DD or press Enter for today)")
     if not start:
         start = datetime.now().strftime("%Y-%m-%d")
     plan.start_date   = start
     plan.team_size    = ask("How many developers will work on this?")
-    plan.tech_stack   = ask("Tech stack? (press Enter to skip)")
+    plan.tech_stack   = _ask("Tech stack? (press Enter to skip)", "tech_stack")
     if not plan.tech_stack:
         plan.tech_stack = "Not specified"
     success("Intake complete.")
 
 
 # ─── Phase Builder ────────────────────────────────────────────────────────────
-def build_phase(phase_name: str, offset: int) -> Phase:
+def build_phase(phase_name: str, offset: int, stories_by_phase: Optional[dict] = None) -> Phase:
     rules = PHASE_RULES.get(phase_name, {})
 
     header(f"PHASE: {phase_name.upper()}")
@@ -226,6 +263,13 @@ def build_phase(phase_name: str, offset: int) -> Phase:
 
     # Features
     header(f"FEATURES — {phase.display_name}")
+    phase_stories = (stories_by_phase or {}).get(phase_name, [])
+    if phase_stories:
+        print(f"\n  {C.DIM}Stories from your backlog assigned to {phase_name}:{C.RESET}")
+        for s in phase_stories:
+            short_text = s.get("text", "")[:75] + ("..." if len(s.get("text", "")) > 75 else "")
+            print(f"  {C.DIM}  [{s.get('id','')}] {short_text}{C.RESET}")
+        print(f"\n  {C.DIM}Use these to name the features below.{C.RESET}")
     info(
         f"List the features planned for this phase.\n"
         f"Mandatory items for {phase_name}:\n"
@@ -461,10 +505,12 @@ def save_outputs(plan: ProjectPlan) -> None:
 
     success(f"Project plan → {os.path.join(cwd, md_file)}")
     success(f"JSON export  → {os.path.join(cwd, js_file)}")
+    print(f"\n  {C.DIM}To render the Gantt chart: paste the mermaid block into")
+    print(f"  mermaid.live, any GitHub .md file, Notion, or GitLab.{C.RESET}")
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
-def main():
+def main(prefill: Optional[dict] = None):
     print(f"\n{C.BOLD}{C.CYAN}{'═' * 60}")
     print("  BUSINESS AND PROJECT CONSULTANT")
     print("  Project Phase Planner")
@@ -480,17 +526,22 @@ def main():
     )
 
     plan = ProjectPlan("", "", "", "")
-    intake_plan(plan)
+    intake_plan(plan, prefill=prefill)
 
     selected_phases = select_phases()
-
+    stories_by_phase = (prefill or {}).get("stories_by_phase")
     offset = 0
     for phase_name in selected_phases:
-        phase = build_phase(phase_name, offset)
+        phase = build_phase(phase_name, offset, stories_by_phase=stories_by_phase)
         plan.phases.append(phase)
         offset += phase.duration_weeks
 
     print_summary(plan)
+    answer = ask("\nReady to save your project plan? (yes to save / no to exit without saving)")
+    if answer.lower() not in ("yes", "y"):
+        print(f"\n{C.YELLOW}⚠ Save cancelled. Run the script again to start over.{C.RESET}\n")
+        sys.exit(0)
+
     save_outputs(plan)
 
     header("DONE")
@@ -512,9 +563,22 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {SKILL_VERSION}")
-    parser.parse_args()
+    parser.add_argument(
+        "--from-backlog",
+        metavar="FILE",
+        help=(
+            "Path to a backlog JSON file (from idea_to_backlog.py). "
+            "Pre-fills project name and tech stack, and shows backlog stories per phase as a guide."
+        ),
+    )
+    args = parser.parse_args()
+    prefill: Optional[dict] = None
+    if args.from_backlog:
+        prefill = load_backlog_prefill(args.from_backlog)
+        if prefill:
+            print(f"\n{C.GREEN}✓ Loaded context from: {args.from_backlog}{C.RESET}")
     try:
-        main()
+        main(prefill=prefill)
     except KeyboardInterrupt:
         print(f"\n\n{C.YELLOW}⚠ Wizard cancelled. No files were saved.{C.RESET}\n")
         sys.exit(0)

@@ -20,6 +20,35 @@ Most developers receive either a vague vision ("I want an app like Airbnb but fo
 
 ---
 
+## Two Ways to Use This Skill
+
+### Option A — Copilot Chat (no terminal needed)
+
+If you have this installed as a Copilot skill, open GitHub Copilot Chat and just describe your idea:
+
+- *"Help me define my app idea"*
+- *"Turn this into a backlog"*
+- *"Create user stories for my project"*
+- *"Plan the development phases"*
+
+Copilot guides you through the same structured BA/PM/PO thinking — entirely in conversation. No Python, no terminal, no files to manage.
+
+### Option B — Interactive Scripts (permanent output files)
+
+Run the three Python wizards directly. Each produces `.md` and `.json` output files you can share with your team, import into GitHub Issues, paste into Jira, or hand to a developer.
+
+```bash
+python3 scripts/requirements_elicitor.py    # Understand the problem
+python3 scripts/idea_to_backlog.py          # Build the backlog
+python3 scripts/project_planner.py          # Plan the phases
+```
+
+**The scripts generate permanent files. Copilot chat does not.** Use Option B when you need deliverables — a requirements doc, a backlog file, or a Gantt chart.
+
+> **Not sure which to use?** Start with Option A (chat) to explore your idea. Switch to Option B when you're ready to produce shareable documents.
+
+---
+
 ## Requirements
 
 - **GitHub Copilot** with agent/skill support enabled
@@ -97,13 +126,27 @@ business-project-consultant/
 
 Run these from your terminal in any project directory. Each script saves its output as `.md` and `.json` files in the directory where you run the command — so run from your project root, not from inside `scripts/`.
 
-### Recommended Order
+### Recommended Order — Full Connected Pipeline
 
+The scripts are designed to feed each other. Run them in order from your **project folder** to eliminate re-typing:
+
+```bash
+# Step 1 — Capture requirements
+cd /path/to/my-project
+python3 /path/to/scripts/requirements_elicitor.py
+# → saves my-project-requirements-<timestamp>.json
+
+# Step 2 — Build backlog (reads Step 1 output, pre-fills project context)
+python3 /path/to/scripts/idea_to_backlog.py --from-requirements my-project-requirements-<timestamp>.json
+# → saves my-project-backlog-<timestamp>.json
+
+# Step 3 — Plan phases (reads Step 2 output, pre-fills name/stack, shows stories per phase)
+python3 /path/to/scripts/project_planner.py --from-backlog my-project-backlog-<timestamp>.json
 ```
-1. requirements_elicitor.py   →   Understand the problem
-2. idea_to_backlog.py         →   Build the backlog
-3. project_planner.py         →   Plan the phases
-```
+
+The `--from-requirements` and `--from-backlog` flags pre-fill project name, problem statement, target user, and tech stack from the previous step's JSON output. Backlog stories also appear as a reference guide during phase planning.
+
+> Each script can also be run standalone without any flags.
 
 ---
 
@@ -147,6 +190,8 @@ python3 scripts/project_planner.py
 ```
 
 Builds a phased development plan (Discovery → MVP → Stabilization → Enhancement → Growth) with goals, feature lists, milestones, risks, decision points, and a Mermaid Gantt chart.
+
+> **Rendering the Gantt chart:** The output `.md` file contains a `mermaid` code block. Paste it into [mermaid.live](https://mermaid.live), any GitHub `.md` file, Notion, or GitLab to render the visual timeline.
 
 **Output files:**
 - `<project-name>-project-plan-<timestamp>.md`
