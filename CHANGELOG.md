@@ -7,6 +7,18 @@ Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 
 ---
 
+## [1.3.0] — 2026-04-28
+
+### Added
+- **GitHub Issues export** (`idea_to_backlog.py`): `save_outputs()` now generates a `*-github-issues-{ts}.md` file alongside the backlog. Each User Story becomes a copy-paste GitHub Issue block with Title, Labels (`must-have`, `mvp`, `effort:m`, etc.), and a structured Body (User Story + AC in Markdown). Includes a `gh issue create` CLI hint.
+- **Business intent pre-fill from `--from-requirements`** (`idea_to_backlog.py`): `load_requirements_prefill()` now extracts `cost_of_inaction` (from Business Risk requirement), `stakeholder_value` (from Stakeholder Need requirement), and `key_assumption` (from first assumption in the assumptions list). These pre-fill the three Business Intent coaching questions in STEP 1b, eliminating re-entry across the full pipeline.
+- **Business Intent block uses `_ask()` for pre-fill**: The three coaching questions in `intake_project()` now support the same "Loaded from requirements / Press Enter to use this" pattern as the main intake questions.
+
+### Fixed
+- **`elicit_context()` Section 1 missing nudge**: `project_context`, `target_users`, and `primary_goal` now pass through `nudge_if_vague()`. Previously Section 1 free-text answers had no quality check — the nudge was only applied in Section 2 onwards.
+
+---
+
 ## [1.2.0] — 2026-04-28
 
 ### Added

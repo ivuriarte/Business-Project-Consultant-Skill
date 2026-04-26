@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Optional
 
-SKILL_VERSION = "1.2.0"
+SKILL_VERSION = "1.3.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────
@@ -245,18 +245,18 @@ def elicit_context(session: ElicitationSession) -> None:
     )
 
     session.project_name    = ask("What do you want to call this app or project?")
-    session.project_context = ask(
+    session.project_context = nudge_if_vague(ask(
         "Describe it like you're explaining it to a friend.\n"
         "  What is it, and what does it do?"
-    )
-    session.target_users    = ask(
+    ))
+    session.target_users    = nudge_if_vague(ask(
         "Who is this for?\n"
         "  (e.g. 'freelance designers', 'small restaurant owners', 'students studying for exams')"
-    )
-    session.primary_goal    = ask(
+    ))
+    session.primary_goal    = nudge_if_vague(ask(
         "If this app could only do one thing really well, what would that be?\n"
         "  (e.g. 'let users track their expenses', 'help people find a doctor nearby')"
-    )
+    ))
     success("Got it. Foundation set.")
 
 

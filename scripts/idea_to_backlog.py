@@ -14,7 +14,7 @@ import re
 from typing import Dict, List, Optional
 from datetime import datetime
 
-SKILL_VERSION = "1.2.0"
+SKILL_VERSION = "1.3.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────
@@ -80,10 +80,25 @@ def load_requirements_prefill(path: str) -> dict:
     # Use the first Business requirement as the problem statement
     brs = [r for r in data.get("requirements", []) if r.get("type") == "Business"]
     problem = brs[0].get("description", "") if brs else data.get("context", "")
+
+    # Map business intent fields from requirement sources
+    cost_of_inaction  = next(
+        (r.get("description", "") for r in brs if r.get("source") == "Business Risk"), ""
+    )
+    stakeholder_value = next(
+        (r.get("description", "") for r in brs if r.get("source") == "Stakeholder Need"), ""
+    )
+    # Key assumption: first item in the assumptions list from the requirements session
+    assumptions_list = data.get("assumptions", [])
+    key_assumption   = assumptions_list[0] if assumptions_list else ""
+
     return {
-        "name":        data.get("project", ""),
-        "problem":     problem,
-        "target_user": data.get("target_users", ""),
+        "name":             data.get("project", ""),
+        "problem":          problem,
+        "target_user":      data.get("target_users", ""),
+        "cost_of_inaction":  cost_of_inaction,
+        "stakeholder_value": stakeholder_value,
+        "key_assumption":    key_assumption,
     }
 
 
@@ -241,22 +256,25 @@ def intake_project(prefill: Optional[dict] = None) -> Project:
         "  The more clearly you answer these, the more valuable your backlog will be."
     )
 
-    cost_of_inaction = nudge_if_vague(prompt(
+    cost_of_inaction = nudge_if_vague(_ask(
         "If you never build this — what pain stays unsolved?\n"
         "  What keeps happening to your users that this app would stop?\n"
-        "  (e.g. 'Freelancers keep forgetting to invoice clients and lose money')"
+        "  (e.g. 'Freelancers keep forgetting to invoice clients and lose money')",
+        "cost_of_inaction",
     ))
 
-    stakeholder_value = nudge_if_vague(prompt(
+    stakeholder_value = nudge_if_vague(_ask(
         "Who else benefits if this succeeds — besides the end user?\n"
         "  Think: your employer, a client, investors, a community, yourself financially.\n"
-        "  (e.g. 'My agency client needs this to reduce support ticket volume by 40%')"
+        "  (e.g. 'My agency client needs this to reduce support ticket volume by 40%')",
+        "stakeholder_value",
     ))
 
-    key_assumption = nudge_if_vague(prompt(
+    key_assumption = nudge_if_vague(_ask(
         "What is your single most important assumption about this idea?\n"
         "  What do you believe is true — but haven't fully confirmed yet?\n"
-        "  (e.g. 'I assume freelancers are willing to pay $10/month to avoid this problem')"
+        "  (e.g. 'I assume freelancers are willing to pay $10/month to avoid this problem')",
+        "key_assumption",
     ))
     # ── End Business Intent Coaching ─────────────────────────────────────────
 
@@ -543,6 +561,49 @@ def render_top_5_prompts(project: Project) -> str:
     return "\n".join(lines)
 
 
+def render_github_issues_md(project: Project) -> str:
+    """Renders each User Story as a copy-paste GitHub Issue block."""
+    lines = []
+    lines.append(f"# GitHub Issues — {project.name}")
+    lines.append(f"_Generated: {project.created_at}_\n")
+    lines.append(
+        "Each block is a ready-to-use GitHub Issue.\n"
+        "Paste the Title and Body into GitHub Issues, or use the GitHub CLI:\n"
+        "```\ngh issue create --title \"<title>\" --body \"<body>\" --label \"<labels>\"\n```\n"
+    )
+    lines.append("---\n")
+
+    for epic in project.epics:
+        lines.append(f"## Epic: {epic.name}\n")
+        for story in epic.stories:
+            priority_label = story.priority.lower().replace(" ", "-").replace("'", "")
+            phase_label    = story.phase.lower()
+            effort_raw     = story.effort.split("(")[0].strip()  # e.g. "M" or "XS"
+            effort_label   = f"effort:{effort_raw.lower()}"
+            title = f"[{story.story_id}] {story.actor.capitalize()} — {story.action}"
+            if len(title) > 100:
+                title = title[:97] + "..."
+
+            lines.append(f"### {story.story_id}")
+            lines.append(f"**Title:** `{title}`")
+            lines.append(f"**Labels:** `{priority_label}`, `{phase_label}`, `{effort_label}`\n")
+            lines.append("**Body:**\n")
+            lines.append("```")
+            lines.append("## User Story")
+            lines.append(f"{story.full_text}\n")
+            lines.append(f"**Epic:** {epic.name}")
+            lines.append(f"**Phase:** {story.phase} | **Priority:** {story.priority} | **Effort:** {story.effort}")
+            lines.append(f"**Value Score:** {story.value_score}/5.0\n")
+            if story.ac:
+                lines.append("## Acceptance Criteria")
+                for i, ac in enumerate(story.ac, 1):
+                    lines.append(f"{i}. {ac.to_text()}")
+            lines.append("```")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
 # ─── Save & Summary ─────────────────────────────────────────────────────────
 def save_outputs(project: Project) -> None:
     header("STEP 5 OF 5 — SAVING OUTPUTS")
@@ -553,10 +614,12 @@ def save_outputs(project: Project) -> None:
     backlog_file = f"{slug}-backlog-{ts}.md"
     prompt_file  = f"{slug}-greatest-value-prompt-{ts}.md"
     json_file    = f"{slug}-backlog-{ts}.json"
+    issues_file  = f"{slug}-github-issues-{ts}.md"
 
     backlog_md  = render_backlog(project)
     prompt_md   = render_greatest_value_prompt(project)
     top5_md     = render_top_5_prompts(project)
+    issues_md   = render_github_issues_md(project)
     json_output = json.dumps(
         {
             "skill_version": SKILL_VERSION,
@@ -588,10 +651,15 @@ def save_outputs(project: Project) -> None:
         f.write(f"\n\n---\n_Generated by Business and Project Consultant v{SKILL_VERSION}_\n")
     with open(json_file, "w", encoding="utf-8") as f:
         f.write(json_output)
+    with open(issues_file, "w", encoding="utf-8") as f:
+        f.write(issues_md)
+        f.write(f"\n\n---\n_Generated by Business and Project Consultant v{SKILL_VERSION}_\n")
 
     success(f"Backlog saved      → {os.path.join(cwd, backlog_file)}")
     success(f"Prompts saved      → {os.path.join(cwd, prompt_file)}")
     success(f"JSON export saved  → {os.path.join(cwd, json_file)}")
+    success(f"GitHub Issues      → {os.path.join(cwd, issues_file)}")
+    info("Tip: paste any issue block into GitHub, or use: gh issue create --title \"...\" --body \"...\"")
 
 
 # ─── Summary Printout ───────────────────────────────────────────────────────

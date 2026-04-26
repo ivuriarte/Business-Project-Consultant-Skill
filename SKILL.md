@@ -3,7 +3,7 @@ name: business-project-consultant
 description: Full-stack Business, Product, and Project Consultant. Merges BA, PM, and PO capabilities to take a raw idea (CEO-level) and produce structured requirements, a prioritized backlog (Epic → User Story → Acceptance Criteria), development phases, key documents, and high-value copy-paste prompts ready for developers. WHEN: "help me define my app idea", "turn this into a backlog", "write requirements", "create user stories", "plan development phases", "BRD", "functional requirements", "acceptance criteria", "what should I build first", "scope my project", "create a roadmap", "I have an idea", "break this down for developers", "give me a prompt to build", "project phases", "MVP scope".
 license: MIT
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   author: Ian Vince
   category: consulting
   domain: business-analysis, product-management, project-management
