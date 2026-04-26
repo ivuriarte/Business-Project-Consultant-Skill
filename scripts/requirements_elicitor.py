@@ -221,37 +221,42 @@ class ElicitationSession:
 
 # ─── Elicitation Sections ────────────────────────────────────────────────────
 def elicit_context(session: ElicitationSession) -> None:
-    header("SECTION 1 — PROJECT CONTEXT")
-    info("Set the foundation. Everything else flows from this.")
+    header("SECTION 1 — YOUR PROJECT")
+    info(
+        "Let's start simple. Just tell me about your idea in plain words.\n"
+        "There are no wrong answers — the more honest you are, the better the output."
+    )
 
-    session.project_name    = ask("What is the name of this project or app?")
+    session.project_name    = ask("What do you want to call this app or project?")
     session.project_context = ask(
-        "Describe the project in 2–3 sentences.\n  What is it? What does it do?"
+        "Describe it like you're explaining it to a friend.\n"
+        "  What is it, and what does it do?"
     )
     session.target_users    = ask(
-        "Who are the primary users?\n  (Be specific: role, context, pain point)"
+        "Who is this for?\n"
+        "  (e.g. 'freelance designers', 'small restaurant owners', 'students studying for exams')"
     )
     session.primary_goal    = ask(
-        "What is the single most important thing this app must accomplish?\n"
-        "  (If it only did one thing, what would it be?)"
+        "If this app could only do one thing really well, what would that be?\n"
+        "  (e.g. 'let users track their expenses', 'help people find a doctor nearby')"
     )
-    success("Context captured.")
+    success("Got it. Foundation set.")
 
 
 def elicit_business_requirements(session: ElicitationSession) -> None:
-    header("SECTION 2 — BUSINESS REQUIREMENTS")
+    header("SECTION 2 — WHY ARE YOU BUILDING THIS?")
     info(
-        "Business requirements answer the WHY.\n"
-        "They describe goals, outcomes, and strategic objectives.\n"
-        "Type 'done' when finished."
+        "These questions are about the big picture — the reason this app needs to exist.\n"
+        "Don't overthink it. Short, honest answers work best.\n"
+        "Type 'skip' on any question you want to skip."
     )
 
     questions = [
-        ("What business outcome must this app deliver?",          "Business Outcome"),
-        ("What metrics will measure success?",                     "Success Metric"),
-        ("What happens if this app is NOT built?",                 "Business Risk"),
-        ("Who are the key stakeholders and what do they need?",    "Stakeholder Need"),
-        ("Are there regulatory, legal, or compliance requirements?","Compliance"),
+        ("What should this app make better, easier, or faster for your users?",  "Business Outcome"),
+        ("How will you know if the app is working? What would success look like?", "Success Metric"),
+        ("What happens if you never build this — what pain stays unsolved?",       "Business Risk"),
+        ("Besides end users, who else cares about this? (e.g. your boss, investors, a client)", "Stakeholder Need"),
+        ("Are there any rules, laws, or policies this app needs to follow?\n  (e.g. data privacy, medical regulations, age restrictions — type 'skip' if unsure)", "Compliance"),
     ]
 
     total = len(questions)
@@ -265,9 +270,9 @@ def elicit_business_requirements(session: ElicitationSession) -> None:
         session.add_requirement("Business", ans, priority, rationale, source)
         success(f"Business requirement added.  [{priority}]")
 
-    print(f"\n{C.DIM}Optional: add any extra business requirements not covered above. Type 'done' to move on.{C.RESET}")
+    print(f"\n{C.DIM}Optional: anything else about WHY this app needs to exist? Press Enter to move on.{C.RESET}")
     while True:
-        ans = ask("Extra business requirement (or 'done' to continue)")
+        ans = ask("Anything to add? (or just press Enter to continue)")
         if ans.lower() == "done" or not ans:
             break
         priority  = resolve_priority("Business Outcome")
@@ -277,24 +282,32 @@ def elicit_business_requirements(session: ElicitationSession) -> None:
 
 
 def elicit_functional_requirements(session: ElicitationSession) -> None:
-    header("SECTION 3 — FUNCTIONAL REQUIREMENTS")
+    header("SECTION 3 — WHAT SHOULD THE APP DO?")
     info(
-        "Functional requirements answer the WHAT.\n"
-        "They describe what the system must DO — specific behaviours and capabilities.\n\n"
-        "Use the JTBD format: 'The system must allow [actor] to [action] so that [outcome].'\n"
-        "Type 'done' when finished."
+        "Now let's talk about the actual features — what can users do inside the app?\n"
+        "Answer in plain English. Example: 'Users can upload a photo of their receipt.'\n"
+        "Type 'skip' on any question that doesn't apply to your app."
     )
 
     prompts = [
-        ("What must a user be able to create, add, or submit?",       "Create Operations"),
-        ("What must a user be able to read, view, or search?",        "Read Operations"),
-        ("What must a user be able to edit or update?",               "Update Operations"),
-        ("What must a user be able to delete or remove?",             "Delete Operations"),
-        ("Are there any notifications or alerts the system must send?","Notifications"),
-        ("What authentication or access control is needed?",          "Auth & Access"),
-        ("Are there any integrations with third-party systems?",      "Integrations"),
-        ("Are there any reporting or dashboard features needed?",     "Reporting"),
-        ("What happens on errors or edge cases?",                     "Error Handling"),
+        ("What can users create, add, or submit in your app?\n"
+         "  (e.g. 'create an invoice', 'post a message', 'submit an order')",     "Create Operations"),
+        ("What can users see, search, or look up?\n"
+         "  (e.g. 'view their transaction history', 'search for a product')",     "Read Operations"),
+        ("What can users change or update after it's been created?\n"
+         "  (e.g. 'edit their profile', 'update an order status')",               "Update Operations"),
+        ("What can users remove or delete?\n"
+         "  (e.g. 'delete an old invoice', 'remove a saved address')",            "Delete Operations"),
+        ("Should the app send any messages or alerts to users?\n"
+         "  (e.g. 'email when a payment is received', 'push notification for a reminder')", "Notifications"),
+        ("Do users need to log in? Should different users see different things?\n"
+         "  (e.g. 'admin vs regular user', 'login with Google')",                 "Auth & Access"),
+        ("Does your app need to connect to any other tools or services?\n"
+         "  (e.g. 'Stripe for payments', 'Google Maps', 'an existing database')", "Integrations"),
+        ("Do you need any charts, reports, or a dashboard?\n"
+         "  (e.g. 'monthly sales summary', 'user activity graph')",               "Reporting"),
+        ("What should happen when something goes wrong?\n"
+         "  (e.g. 'show a friendly error message', 'retry automatically')",       "Error Handling"),
     ]
 
     total = len(prompts)
@@ -308,9 +321,9 @@ def elicit_functional_requirements(session: ElicitationSession) -> None:
         session.add_requirement("Functional", ans, priority, rationale, source)
         success(f"Functional requirement added.  [{priority}]")
 
-    print(f"\n{C.DIM}Optional: add any extra functional requirements not covered above. Type 'done' to move on.{C.RESET}")
+    print(f"\n{C.DIM}Optional: any other features the app needs? Press Enter to move on.{C.RESET}")
     while True:
-        ans = ask("Extra functional requirement (or 'done' to continue)")
+        ans = ask("Any other feature to add? (or just press Enter to continue)")
         if ans.lower() == "done" or not ans:
             break
         priority  = resolve_priority("Create Operations")
@@ -320,23 +333,30 @@ def elicit_functional_requirements(session: ElicitationSession) -> None:
 
 
 def elicit_non_functional_requirements(session: ElicitationSession) -> None:
-    header("SECTION 4 — NON-FUNCTIONAL REQUIREMENTS")
+    header("SECTION 4 — HOW SHOULD THE APP PERFORM?")
     info(
-        "Non-functional requirements answer HOW WELL.\n"
-        "They define quality attributes: performance, security, scalability, usability.\n"
-        "Skipping these is the #1 cause of 'works on my machine' failures in production.\n"
-        "Type 'skip' to skip a question."
+        "These questions aren't about features — they're about quality and reliability.\n"
+        "Think of it as: what would make users trust and keep using the app?\n"
+        "Type 'skip' on anything you're not sure about — we'll use sensible defaults."
     )
 
     nfr_prompts = [
-        ("How fast must the app respond? (e.g. pages load in < 2s)",              "Performance",   "Should Have"),
-        ("How many concurrent users must it handle? (e.g. 1,000 simultaneous)",  "Scalability",   "Should Have"),
-        ("What are the uptime / availability requirements? (e.g. 99.9%)",         "Availability",  "Should Have"),
-        ("What security requirements exist? (e.g. data encryption, OWASP Top 10)","Security",      "Must Have"),
-        ("What accessibility standards apply? (e.g. WCAG 2.1 AA)",               "Accessibility", "Should Have"),
-        ("What browsers or devices must be supported?",                           "Compatibility", "Must Have"),
-        ("Are there data retention or backup requirements?",                      "Data",          "Should Have"),
-        ("Are there audit logging or monitoring requirements?",                   "Observability", "Should Have"),
+        ("How fast should the app feel?\n"
+         "  (e.g. 'pages should load in under 2 seconds', or type 'skip' to use a standard default)", "Performance",   "Should Have"),
+        ("How many people do you expect to use it at the same time?\n"
+         "  (e.g. '10 users during beta', '1,000 at launch', or 'skip' if you don't know yet)",     "Scalability",   "Should Have"),
+        ("Can the app have downtime, or does it need to always be available?\n"
+         "  (e.g. 'it's fine if it's down for maintenance', '99.9% uptime required')",               "Availability",  "Should Have"),
+        ("What personal or sensitive data will the app store?\n"
+         "  (e.g. 'email addresses and passwords', 'payment info', 'health records')",               "Security",      "Must Have"),
+        ("Do you need to support users with disabilities?\n"
+         "  (e.g. 'yes, screen reader support', 'basic keyboard navigation', or 'skip')",           "Accessibility", "Should Have"),
+        ("What devices and browsers should it work on?\n"
+         "  (e.g. 'Chrome and Safari on desktop', 'mobile phones too')",                             "Compatibility", "Must Have"),
+        ("How long should user data be kept, and does it need to be backed up?\n"
+         "  (e.g. 'keep data for 1 year', 'daily backups', or 'skip')",                             "Data",          "Should Have"),
+        ("Do you need to track errors or know when something breaks in production?\n"
+         "  (e.g. 'yes, error alerts via email', 'basic logging is fine', or 'skip')",              "Observability", "Should Have"),
     ]
 
     total = len(nfr_prompts)
@@ -351,105 +371,119 @@ def elicit_non_functional_requirements(session: ElicitationSession) -> None:
 
 
 def elicit_constraints(session: ElicitationSession) -> None:
-    header("SECTION 5 — CONSTRAINTS & ASSUMPTIONS")
+    header("SECTION 5 — LIMITS & BELIEFS")
     info(
-        "Constraints are hard limits that cannot be changed (budget, tech, deadlines).\n"
-        "Assumptions are things you believe to be true but haven't verified.\n"
-        "Both must be documented — they govern every decision you make."
+        "Constraints are things that are fixed and can't be changed — like your tech choice,\n"
+        "your deadline, or your budget. Assumptions are things you believe are true but\n"
+        "haven't confirmed yet. Both are important to write down.\n"
+        "Type 'skip' on any question that doesn't apply."
     )
 
-    print(f"\n{C.BOLD}Constraints:{C.RESET} Type 'done' when finished.")
+    print(f"\n{C.BOLD}Fixed Limits (Constraints):{C.RESET}")
     constraint_prompts = [
-        "What technology stack MUST be used?",
-        "What is the budget or resource limit?",
-        "Are there any hard deadlines?",
-        "What existing systems must be integrated with?",
+        ("Is there a specific technology, framework, or platform you HAVE to use?\n"
+         "  (e.g. 'must use React', 'has to run on AWS', or 'skip' if flexible)"),
+        ("Do you have a budget or team size limit?\n"
+         "  (e.g. 'solo developer', '$500/month max running cost', or 'skip')"),
+        ("Is there a hard launch date or deadline?\n"
+         "  (e.g. 'must be ready by June', 'need MVP in 4 weeks', or 'skip')"),
+        ("Does this app need to connect to a system that already exists?\n"
+         "  (e.g. 'must sync with our existing CRM', or 'skip')"),
     ]
     for q in constraint_prompts:
         ans = ask(q)
-        if ans.lower() in ("done", "skip", ""):
+        if ans.lower() in ("done", "skip", "") or not ans:
             continue
         session.constraints.append(ans)
-        req = session.add_requirement("Constraint", ans, "Must Have", "Hard limit on design/build", "Constraints Workshop")
-        success("Constraint added.")
+        session.add_requirement("Constraint", ans, "Must Have", "Hard limit on design/build", "Constraints Workshop")
+        success("Constraint noted.")
 
+    print(f"\n{C.DIM}Optional: any other fixed limits? Press Enter to move on.{C.RESET}")
     while True:
-        ans = ask("Additional constraint (or 'done')")
-        if ans.lower() == "done":
+        ans = ask("Any other fixed limit? (or just press Enter to continue)")
+        if ans.lower() == "done" or not ans:
             break
         session.constraints.append(ans)
         session.add_requirement("Constraint", ans, "Must Have", "Hard limit", "Custom")
-        success("Added.")
+        success("Noted.")
 
-    print(f"\n{C.BOLD}Assumptions:{C.RESET} Type 'done' when finished.")
+    print(f"\n{C.BOLD}Beliefs & Assumptions:{C.RESET}")
     assumption_prompts = [
-        "What do you assume about the users' technical ability?",
-        "What infrastructure or services do you assume are available?",
-        "What do you assume about the market or user demand?",
+        ("How tech-savvy are your users? Can they figure things out, or do they need hand-holding?\n"
+         "  (e.g. 'they're comfortable with apps', 'very non-technical', or 'skip')"),
+        ("What do you assume will already be in place when this launches?\n"
+         "  (e.g. 'users have a smartphone', 'stable internet available', or 'skip')"),
+        ("What are you assuming about whether people actually want this?\n"
+         "  (e.g. 'freelancers hate invoicing', 'there's no good free alternative', or 'skip')"),
     ]
     for q in assumption_prompts:
         ans = ask(q)
-        if ans.lower() in ("done", "skip", ""):
+        if ans.lower() in ("done", "skip", "") or not ans:
             continue
         session.assumptions.append(ans)
         session.add_requirement("Assumption", ans, "Could Have", "Needs validation before shipping", "Assumption Log")
-        success("Assumption logged.")
+        success("Assumption noted.")
 
+    print(f"\n{C.DIM}Optional: any other assumptions? Press Enter to move on.{C.RESET}")
     while True:
-        ans = ask("Additional assumption (or 'done')")
-        if ans.lower() == "done":
+        ans = ask("Any other assumption? (or just press Enter to continue)")
+        if ans.lower() == "done" or not ans:
             break
         session.assumptions.append(ans)
         session.add_requirement("Assumption", ans, "Could Have", "Needs validation", "Custom")
-        success("Added.")
+        success("Noted.")
 
 
 def elicit_out_of_scope(session: ElicitationSession) -> None:
-    header("SECTION 6 — OUT OF SCOPE")
+    header("SECTION 6 — WHAT WON'T YOU BUILD?")
     info(
-        "Explicitly defining what is OUT of scope is just as important as defining\n"
-        "what IS in scope. It prevents scope creep and sets developer expectations.\n"
+        "This is one of the most important sections — and most people skip it.\n"
+        "Listing what you WON'T build prevents feature creep and\n"
+        "stops developers from building things nobody asked for.\n\n"
+        "Think: what would people expect this app to do, but you're not including yet?\n"
+        "(e.g. 'no mobile app yet', 'no payment processing in V1', 'no admin panel')\n"
         "Type 'done' when finished."
     )
 
     while True:
-        ans = ask("What is explicitly NOT included in this project? (or 'done')")
+        ans = ask("What's something this app will NOT do (at least not yet)? (or 'done')")
         if ans.lower() == "done":
             if not session.out_of_scope:
-                warn("At least one out-of-scope item is strongly recommended. Add one or type 'done'.")
-                continue_anyway = ask("Continue anyway? (yes/no)")
+                warn("Tip: at least one out-of-scope item is strongly recommended — it protects you from scope creep.")
+                continue_anyway = ask("Skip this section anyway? (yes / no)")
                 if continue_anyway.lower() in ("yes", "y"):
                     break
             else:
                 break
         elif ans:
             session.out_of_scope.append(ans)
-            success("Out of scope item logged.")
+            success("Noted as out of scope.")
 
 
 def elicit_stakeholders(session: ElicitationSession) -> None:
-    header("SECTION 7 — STAKEHOLDER REGISTER")
+    header("SECTION 7 — WHO'S INVOLVED?")
     info(
-        "List the key people involved: who uses it, who approves it, who is affected.\n"
-        "Type 'done' when finished."
+        "Who else has a stake in this project beyond the end users?\n"
+        "This could be you, a client, a manager, investors, or a team member.\n"
+        "Type 'done' when you've added everyone (or right away to skip this section)."
     )
 
     roles = ["End User", "Business Owner", "Developer", "QA", "Marketing", "Finance", "Legal"]
 
     while True:
-        name = ask("Stakeholder name (or 'done')")
-        if name.lower() == "done":
+        name = ask("Person's name (or 'done' to finish)")
+        if name.lower() == "done" or not name:
             break
-        role = ask(f"Role? (e.g. {', '.join(roles)})")
-        interest = ask("What is their interest in this project?")
-        influence = ask("Influence level? (High / Medium / Low)")
+        role = ask(f"What's their role? (e.g. {', '.join(roles)})")
+        interest = ask("What do they care about most in this project?\n  (e.g. 'wants it launched fast', 'needs to approve the budget')")
+        influence = ask("How much say do they have? (High / Medium / Low)")
         session.stakeholders.append({
             "name": name,
             "role": role,
             "interest": interest,
             "influence": influence,
         })
-        success(f"Stakeholder '{name}' added.")
+        success(f"Added {name}.")
 
 
 # ─── Output Rendering ────────────────────────────────────────────────────────
@@ -587,14 +621,17 @@ def print_summary(session: ElicitationSession) -> None:
 def main():
     print(f"\n{C.BOLD}{C.CYAN}{'═' * 60}")
     print("  BUSINESS AND PROJECT CONSULTANT")
-    print("  Requirements Elicitation Wizard")
+    print("  Let's figure out what you're building")
     print(f"{'═' * 60}{C.RESET}")
     info(
-        "This wizard guides you through a structured requirements elicitation.\n"
-        "Output: A formal requirements document ready for developer handoff.\n\n"
-        "Tip: Answer every question thoughtfully.\n"
-        "Vague requirements = vague implementations = expensive rework.\n\n"
-        "Estimated time: 15–30 minutes."
+        "This is a guided conversation \u2014 not a form, not a test.\n"
+        "Answer in plain words. You can't get this wrong.\n\n"
+        "By the end, you'll have a clear requirements document you can hand\n"
+        "to a developer (or paste into Copilot) and get exactly what you want.\n\n"
+        "  \u2022 Type 'skip' on any question to move on\n"
+        "  \u2022 Press Enter on priority/rationale prompts to accept the suggestion\n"
+        "  \u2022 Press Ctrl+C at any time to exit without saving\n\n"
+        "Estimated time: 15\u201330 minutes."
     )
 
     session = ElicitationSession()
