@@ -51,6 +51,99 @@ def warn(text: str):
     print(f"\n{C.RED}⚠ {text}{C.RESET}")
 
 
+# ─── Smart Priority & Rationale Resolution ───────────────────────────────────
+_RECOMMEND_TRIGGERS = (
+    "don't know", "do not know", "not sure", "unsure", "idk", "no idea",
+    "recommend", "suggest", "your call", "you decide", "help me", "dunno",
+    "not certain", "you choose", "auto", "default",
+)
+
+def _is_recommend(text: str) -> bool:
+    t = text.lower()
+    return not text or any(p in t for p in _RECOMMEND_TRIGGERS)
+
+def _normalize_priority(raw: str, default: str) -> str:
+    """Map loose input (e.g. 'must', 'critical') to canonical MoSCoW values."""
+    t = raw.lower()
+    if any(x in t for x in ("must", "critical", "required", "mandatory")):
+        return "Must Have"
+    if any(x in t for x in ("should", "important", "high")):
+        return "Should Have"
+    if any(x in t for x in ("could", "nice", "low", "optional")):
+        return "Could Have"
+    return default  # fall back to caller's default if unrecognised
+
+_PRIORITY_GUIDE: Dict[str, tuple] = {
+    # source → (recommended_priority, plain-English reason)
+    "Business Outcome": ("Must Have",    "Business outcomes define why the app exists — no outcome, no product."),
+    "Success Metric":   ("Should Have",  "Metrics let you know when you've achieved the goal."),
+    "Business Risk":    ("Must Have",    "Understanding the cost of inaction clarifies the stakes."),
+    "Stakeholder Need": ("Should Have",  "Stakeholder needs guide features but urgency varies."),
+    "Compliance":       ("Must Have",    "Legal and regulatory requirements are non-negotiable."),
+    "Create Operations":("Must Have",    "Core create functionality is foundational to most apps."),
+    "Read Operations":  ("Must Have",    "Without read capability, created data has no value to the user."),
+    "Update Operations":("Should Have",  "Edit functionality is important but secondary to create/read."),
+    "Delete Operations":("Should Have",  "Users need control over their data, though this can sometimes be phased."),
+    "Notifications":    ("Should Have",  "Notifications improve UX but are rarely blocking for MVP."),
+    "Auth & Access":    ("Must Have",    "Authentication is required before any personal data can be stored."),
+    "Integrations":     ("Could Have",   "Third-party integrations add value but are often phase-able."),
+    "Reporting":        ("Could Have",   "Data visibility is valuable but rarely a hard MVP blocker."),
+    "Error Handling":   ("Should Have",  "Clear errors reduce support burden and user frustration."),
+    "Performance":      ("Should Have",  "Performance goals set the baseline for a usable experience."),
+    "Scalability":      ("Should Have",  "Scalability matters once you have users — plan early but phase late."),
+    "Availability":     ("Should Have",  "Uptime requirements affect infrastructure choices."),
+    "Security":         ("Must Have",    "Security flaws can sink a product before it launches."),
+    "Accessibility":    ("Should Have",  "Accessibility broadens your user base and may be legally required."),
+    "Compatibility":    ("Must Have",    "Unsupported browsers/devices block users from using the app at all."),
+    "Data":             ("Should Have",  "Data retention policies avoid legal risk and user data loss."),
+    "Observability":    ("Should Have",  "Logging and monitoring are essential once you have real users."),
+}
+_PRIORITY_DEFAULT = ("Should Have", "This requirement supports the overall quality and value of the project.")
+
+_RATIONALE_GUIDE: Dict[str, str] = {
+    "Business Outcome": "This defines the core business value the app must deliver.",
+    "Success Metric":   "Measurable outcomes allow stakeholders to evaluate ROI and make go/no-go decisions.",
+    "Business Risk":    "Documenting business risk clarifies the cost of inaction.",
+    "Stakeholder Need": "Capturing stakeholder needs ensures alignment before development begins.",
+    "Compliance":       "Legal and regulatory compliance is a non-negotiable foundation.",
+    "Create Operations":"Users must be able to create data — foundational to most apps.",
+    "Read Operations":  "Without read functionality, created data has no value to the user.",
+    "Update Operations":"Editable data keeps the app useful over time as situations change.",
+    "Delete Operations":"Users need control over their data.",
+    "Notifications":    "Timely alerts reduce the need for manual status checks.",
+    "Auth & Access":    "Access control protects user data and determines what each role can do.",
+    "Integrations":     "Integrations extend the app's value without rebuilding existing systems.",
+    "Reporting":        "Data visibility helps users make decisions within the app.",
+    "Error Handling":   "Clear error messages prevent user frustration and reduce support burden.",
+    "Performance":      "Performance goals define the minimum acceptable user experience.",
+    "Security":         "Security requirements protect users and the business from harm.",
+}
+_RATIONALE_DEFAULT = "This requirement supports the primary goal of the project."
+
+
+def resolve_priority(source: str, suggested: str = None) -> str:
+    rec_priority, rec_reason = _PRIORITY_GUIDE.get(source, _PRIORITY_DEFAULT)
+    if suggested:
+        rec_priority = suggested
+
+    print(f"\n  {C.DIM}Suggested priority: {C.RESET}{C.BOLD}{C.CYAN}{rec_priority}{C.RESET}  "
+          f"{C.DIM}({rec_reason}){C.RESET}")
+    raw = input(f"  Priority [Enter = accept '{rec_priority}', or type Must Have / Should Have / Could Have]: ").strip()
+
+    if not raw or _is_recommend(raw):
+        return rec_priority
+    return _normalize_priority(raw, rec_priority)
+
+
+def resolve_rationale(source: str) -> str:
+    suggestion = _RATIONALE_GUIDE.get(source, _RATIONALE_DEFAULT)
+    print(f"\n  {C.DIM}Suggested rationale: \"{suggestion}\"{C.RESET}")
+    raw = input(f"  Why is this required? [Enter = accept suggestion, or type your own]: ").strip()
+    if not raw or _is_recommend(raw):
+        return suggestion
+    return raw
+
+
 # ─── Requirement Model ───────────────────────────────────────────────────────
 class Requirement:
     TYPES = ["Functional", "Non-Functional", "Business", "Constraint", "Assumption"]
@@ -161,24 +254,26 @@ def elicit_business_requirements(session: ElicitationSession) -> None:
         ("Are there regulatory, legal, or compliance requirements?","Compliance"),
     ]
 
-    for q, source in questions:
+    total = len(questions)
+    for i, (q, source) in enumerate(questions, 1):
+        print(f"\n{C.DIM}  Question {i} of {total}{C.RESET}")
         ans = ask(q)
-        if ans.lower() == "done" or not ans:
+        if ans.lower() in ("done", "skip") or not ans:
             continue
-        priority = ask(f'Priority for this requirement? (Must Have / Should Have / Could Have)')
-        rationale = ask(f"Why is this requirement important?")
+        priority  = resolve_priority(source)
+        rationale = resolve_rationale(source)
         session.add_requirement("Business", ans, priority, rationale, source)
-        success(f"Business requirement added.")
+        success(f"Business requirement added.  [{priority}]")
 
-    print(f"\n{C.DIM}Add any additional business requirements. Type 'done' to continue.{C.RESET}")
+    print(f"\n{C.DIM}Optional: add any extra business requirements not covered above. Type 'done' to move on.{C.RESET}")
     while True:
-        ans = ask("Additional business requirement (or 'done')")
-        if ans.lower() == "done":
+        ans = ask("Extra business requirement (or 'done' to continue)")
+        if ans.lower() == "done" or not ans:
             break
-        priority  = ask("Priority? (Must Have / Should Have / Could Have)")
-        rationale = ask("Why is this important?")
+        priority  = resolve_priority("Business Outcome")
+        rationale = resolve_rationale("Business Outcome")
         session.add_requirement("Business", ans, priority, rationale, "Stakeholder")
-        success("Added.")
+        success(f"Added.  [{priority}]")
 
 
 def elicit_functional_requirements(session: ElicitationSession) -> None:
@@ -202,24 +297,26 @@ def elicit_functional_requirements(session: ElicitationSession) -> None:
         ("What happens on errors or edge cases?",                     "Error Handling"),
     ]
 
-    for q, source in prompts:
+    total = len(prompts)
+    for i, (q, source) in enumerate(prompts, 1):
+        print(f"\n{C.DIM}  Question {i} of {total}  (type 'skip' to skip this one){C.RESET}")
         ans = ask(q)
-        if ans.lower() == "done" or not ans:
+        if ans.lower() in ("done", "skip") or not ans:
             continue
-        priority  = ask("Priority? (Must Have / Should Have / Could Have)")
-        rationale = ask("Why is this required?")
+        priority  = resolve_priority(source)
+        rationale = resolve_rationale(source)
         session.add_requirement("Functional", ans, priority, rationale, source)
-        success("Functional requirement added.")
+        success(f"Functional requirement added.  [{priority}]")
 
-    print(f"\n{C.DIM}Add any remaining functional requirements. Type 'done' to continue.{C.RESET}")
+    print(f"\n{C.DIM}Optional: add any extra functional requirements not covered above. Type 'done' to move on.{C.RESET}")
     while True:
-        ans = ask("Additional functional requirement (or 'done')")
-        if ans.lower() == "done":
+        ans = ask("Extra functional requirement (or 'done' to continue)")
+        if ans.lower() == "done" or not ans:
             break
-        priority  = ask("Priority? (Must Have / Should Have / Could Have)")
-        rationale = ask("Why is this required?")
+        priority  = resolve_priority("Create Operations")
+        rationale = resolve_rationale("Create Operations")
         session.add_requirement("Functional", ans, priority, rationale, "Custom")
-        success("Added.")
+        success(f"Added.  [{priority}]")
 
 
 def elicit_non_functional_requirements(session: ElicitationSession) -> None:
@@ -242,15 +339,15 @@ def elicit_non_functional_requirements(session: ElicitationSession) -> None:
         ("Are there audit logging or monitoring requirements?",                   "Observability", "Should Have"),
     ]
 
-    for q, source, default_priority in nfr_prompts:
+    total = len(nfr_prompts)
+    for i, (q, source, default_priority) in enumerate(nfr_prompts, 1):
+        print(f"\n{C.DIM}  Question {i} of {total}  (type 'skip' to skip){C.RESET}")
         ans = ask(q)
-        if ans.lower() in ("skip", "done", ""):
+        if ans.lower() in ("skip", "done", "") or not ans:
             continue
-        priority  = ask(f"Priority? (default: {default_priority}) — press Enter to accept")
-        if not priority:
-            priority = default_priority
+        priority = resolve_priority(source, suggested=default_priority)
         session.add_requirement("Non-Functional", ans, priority, source, source)
-        success(f"NFR ({source}) added.")
+        success(f"NFR ({source}) added.  [{priority}]")
 
 
 def elicit_constraints(session: ElicitationSession) -> None:
