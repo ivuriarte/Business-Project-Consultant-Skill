@@ -8,6 +8,10 @@
 *-requirements-*.json
 *-project-plan-*.md
 *-project-plan-*.json
+*-github-issues-*.md
+
+# Local working notes — never commit
+TODO.md
 
 # Python
 __pycache__/

@@ -3,7 +3,7 @@
 A GitHub Copilot skill that gives developers the full structured thinking of a Business Analyst, Product Owner, and Project Manager — from a raw idea to a developer-ready backlog, phased plan, and actionable prompts.
 
 **Author:** Ian Vince  
-**Version:** 1.0.0  
+**Version:** 1.3.0  
 **License:** MIT
 
 ---
@@ -178,6 +178,7 @@ An interactive wizard that takes your raw idea and produces a full prioritized b
 - `<project-name>-backlog-<timestamp>.md`
 - `<project-name>-greatest-value-prompt-<timestamp>.md`
 - `<project-name>-backlog-<timestamp>.json`
+- `<project-name>-github-issues-<timestamp>.md` ← copy-paste GitHub Issue blocks + `gh issue create` CLI tip
 
 **Time:** 10–20 minutes
 
