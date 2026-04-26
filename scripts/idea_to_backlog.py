@@ -14,7 +14,7 @@ import re
 from typing import Dict, List, Optional
 from datetime import datetime
 
-SKILL_VERSION = "1.1.0"
+SKILL_VERSION = "1.2.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────
@@ -189,6 +189,10 @@ class Project:
         self.tech_stack = tech_stack
         self.epics: List[Epic] = []
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+        # Business intent coaching fields (set by intake_project)
+        self.cost_of_inaction:  str = ""
+        self.stakeholder_value: str = ""
+        self.key_assumption:    str = ""
 
 
 # ─── Intake Wizard ──────────────────────────────────────────────────────────
@@ -225,6 +229,37 @@ def intake_project(prefill: Optional[dict] = None) -> Project:
         "What is the tech stack? (Press Enter to skip)\n  (e.g. 'Next.js, Supabase, Tailwind')"
     )
 
+    # ── Business Intent Coaching ─────────────────────────────────────────────
+    # These 3 questions are non-skippable. They force the developer to think
+    # like a product owner BEFORE touching a single Epic. This is the most
+    # common gap for developers with no BA or business background.
+    header("STEP 1b OF 5 — BUSINESS INTENT")
+    info(
+        "These three questions are the most important ones in this wizard.\n"
+        "Developers often skip straight to features — these questions stop that.\n\n"
+        "  There are no wrong answers. Short, honest answers are best.\n"
+        "  The more clearly you answer these, the more valuable your backlog will be."
+    )
+
+    cost_of_inaction = nudge_if_vague(prompt(
+        "If you never build this — what pain stays unsolved?\n"
+        "  What keeps happening to your users that this app would stop?\n"
+        "  (e.g. 'Freelancers keep forgetting to invoice clients and lose money')"
+    ))
+
+    stakeholder_value = nudge_if_vague(prompt(
+        "Who else benefits if this succeeds — besides the end user?\n"
+        "  Think: your employer, a client, investors, a community, yourself financially.\n"
+        "  (e.g. 'My agency client needs this to reduce support ticket volume by 40%')"
+    ))
+
+    key_assumption = nudge_if_vague(prompt(
+        "What is your single most important assumption about this idea?\n"
+        "  What do you believe is true — but haven't fully confirmed yet?\n"
+        "  (e.g. 'I assume freelancers are willing to pay $10/month to avoid this problem')"
+    ))
+    # ── End Business Intent Coaching ─────────────────────────────────────────
+
     project = Project(
         name=name,
         problem_statement=problem,
@@ -232,6 +267,9 @@ def intake_project(prefill: Optional[dict] = None) -> Project:
         success_definition=success_definition,
         tech_stack=tech_stack if tech_stack else "Not specified",
     )
+    project.cost_of_inaction  = cost_of_inaction
+    project.stakeholder_value = stakeholder_value
+    project.key_assumption    = key_assumption
 
     success(f'Project "{name}" created.')
     return project
@@ -403,6 +441,10 @@ def render_backlog(project: Project) -> str:
     lines.append(f"- **Target User:** {project.target_user}")
     lines.append(f"- **Success in 90 days:** {project.success_definition}")
     lines.append(f"- **Tech Stack:** {project.tech_stack}\n")
+    lines.append("## Business Intent")
+    lines.append(f"- **Cost of Inaction:** {project.cost_of_inaction}")
+    lines.append(f"- **Stakeholder Value:** {project.stakeholder_value}")
+    lines.append(f"- **Key Assumption to Validate:** {project.key_assumption}\n")
     lines.append("---\n")
 
     for epic in project.epics:
@@ -466,6 +508,12 @@ def render_greatest_value_prompt(project: Project) -> str:
     lines.append(f"- [ ] Story {story.story_id} is marked complete in the backlog.")
     lines.append("")
     lines.append(f"Value Score: {story.value_score}/5.0 (Business Value: {story.business_value} | User Impact: {story.user_impact} | Feasibility: {story.feasibility})")
+    lines.append("")
+    if project.cost_of_inaction:
+        lines.append("Business Context (why this matters):")
+        lines.append(f"- Cost of not building: {project.cost_of_inaction}")
+    if project.key_assumption:
+        lines.append(f"- Key assumption to validate: {project.key_assumption}")
     lines.append("--- END PROMPT ---")
     lines.append("```")
 
@@ -518,6 +566,11 @@ def save_outputs(project: Project) -> None:
             "target_user": project.target_user,
             "success_definition": project.success_definition,
             "tech_stack": project.tech_stack,
+            "business_intent": {
+                "cost_of_inaction":  project.cost_of_inaction,
+                "stakeholder_value": project.stakeholder_value,
+                "key_assumption":    project.key_assumption,
+            },
             "epics": [e.to_dict() for e in project.epics],
         },
         indent=2,

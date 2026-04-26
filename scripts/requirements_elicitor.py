@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Optional
 
-SKILL_VERSION = "1.1.0"
+SKILL_VERSION = "1.2.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────

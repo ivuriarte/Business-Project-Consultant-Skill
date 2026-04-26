@@ -7,6 +7,14 @@ Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 
 ---
 
+## [1.2.0] — 2026-04-28
+
+### Added
+- **Business Intent Coaching block** in `idea_to_backlog.py` (`intake_project()`): Three non-skippable questions — Cost of Inaction, Stakeholder Value, Key Assumption — surface business thinking for developers with no BA background before a single Epic is created. These fields are written to the backlog Markdown ("Business Intent" section), the backlog JSON (`business_intent` object), and the Greatest Value Prompt ("Business Context" block).
+- **SKILL.md chat mode rule**: Agent now requires answers to all three Business Intent questions before generating any features or epics. Includes a rebuttal script for users who push back ("just give me the backlog"). This enforces the "why before what" principle in Copilot chat mode.
+
+---
+
 ## [1.1.0] — 2026-04-28
 
 ### Added
