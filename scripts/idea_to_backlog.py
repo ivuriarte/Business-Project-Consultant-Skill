@@ -166,7 +166,7 @@ def intake_project() -> Project:
     target_user = prompt(
         "Who is the primary user?\n  (e.g. 'Freelance designers aged 25-40 who work remotely')"
     )
-    success = prompt(
+    success_definition = prompt(
         "What does success look like in 90 days?\n  (e.g. '100 active users, avg 3 invoices/week sent')"
     )
     tech_stack = prompt(
@@ -177,7 +177,7 @@ def intake_project() -> Project:
         name=name,
         problem_statement=problem,
         target_user=target_user,
-        success_definition=success,
+        success_definition=success_definition,
         tech_stack=tech_stack if tech_stack else "Not specified",
     )
 
