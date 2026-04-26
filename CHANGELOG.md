@@ -7,6 +7,27 @@ Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 
 ---
 
+## [1.1.0] — 2026-04-28
+
+### Added
+- **Pipeline connection** (`--from-requirements`, `--from-backlog` flags): `idea_to_backlog.py` and `project_planner.py` now accept upstream JSON output to pre-fill project context, eliminating re-entry across the three-script workflow
+- **AC hints with examples**: `collect_ac()` now shows inline GIVEN/WHEN/THEN examples (`e.g. 'I am on the login page'`) and a personalized suggested first criterion built from the story's actor, action, and outcome
+- **Save confirmation**: All three scripts prompt "Ready to save?" before writing any files — users can review the summary and cancel cleanly
+- **Mermaid render instructions**: `project_planner.py` prints render guidance (mermaid.live, GitHub .md, Notion, GitLab) after saving the plan
+- **"Two Ways to Use" README section**: Distinguishes Copilot chat usage (Option A) from CLI scripts (Option B) with guidance for new users
+- **Backlog stories guide in phase planner**: `build_phase()` displays stories from the loaded backlog assigned to each phase as a reference before feature entry
+- **Dynamic pipeline tip**: `requirements_elicitor.py` DONE block now prints the actual saved JSON filename in the `--from-requirements` command instead of a `<placeholder>`
+
+### Fixed
+- **NFR rationale missing**: `elicit_non_functional_requirements()` was passing the source category name as the rationale field instead of calling `resolve_rationale(source)`. All NFRs now have meaningful, context-appropriate rationale sentences in the output document
+- **`confirm_phases()` ellipsis**: Always-appended `...` to story text in the phase review step regardless of text length — now conditional on `len(text) > 60`
+- **Nudge threshold**: Reduced vague-answer threshold from 15 to 10 characters in all three scripts
+- **`so that so they` double conjunction**: Stripped leading `so that` / `so` prefix from story outcomes via `re.sub` — the `full_text` template adds it back correctly
+- **Gantt sequential features**: `running_date` now advances per feature within each phase instead of all features starting on the same day
+- **Duplicate AC block in Greatest Value Prompt**: Collapsed two redundant acceptance criteria sections into one numbered list
+
+---
+
 ## [1.0.1] — 2026-04-27
 
 ### Fixed

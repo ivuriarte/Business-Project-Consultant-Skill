@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Optional
 
-SKILL_VERSION = "1.0.0"
+SKILL_VERSION = "1.1.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────
@@ -383,8 +383,9 @@ def elicit_non_functional_requirements(session: ElicitationSession) -> None:
         ans = ask(q)
         if ans.lower() in ("skip", "done", "") or not ans:
             continue
-        priority = resolve_priority(source, suggested=default_priority)
-        session.add_requirement("Non-Functional", ans, priority, source, source)
+        priority  = resolve_priority(source, suggested=default_priority)
+        rationale = resolve_rationale(source)
+        session.add_requirement("Non-Functional", ans, priority, rationale, source)
         success(f"NFR ({source}) added.  [{priority}]")
 
 
@@ -611,6 +612,7 @@ def save_outputs(session: ElicitationSession) -> None:
 
     success(f"Requirements doc → {os.path.join(cwd, md_file)}")
     success(f"JSON export      → {os.path.join(cwd, js_file)}")
+    return js_file
 
 
 def print_summary(session: ElicitationSession) -> None:
@@ -667,13 +669,13 @@ def main():
     if answer.lower() not in ("yes", "y"):
         print(f"\n{C.YELLOW}⚠ Save cancelled. Run the script again to start over.{C.RESET}\n")
         sys.exit(0)
-    save_outputs(session)
+    saved_json = save_outputs(session)
 
     header("DONE")
     print(f"\n  Your requirements document is ready for stakeholder review.")
     print(f"  Next step: run idea_to_backlog.py to convert these requirements into a backlog.\n")
     print(f"  Tip — pass your JSON output to skip re-entering project context:")
-    print(f"  python3 scripts/idea_to_backlog.py --from-requirements <your-requirements-file>.json\n")
+    print(f"  python3 scripts/idea_to_backlog.py --from-requirements {saved_json}\n")
 
 
 if __name__ == "__main__":

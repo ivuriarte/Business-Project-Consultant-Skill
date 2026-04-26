@@ -14,7 +14,7 @@ import re
 from typing import Dict, List, Optional
 from datetime import datetime
 
-SKILL_VERSION = "1.0.0"
+SKILL_VERSION = "1.1.0"
 
 
 # ─── ANSI Colors ────────────────────────────────────────────────────────────
@@ -576,7 +576,9 @@ def confirm_phases(project: Project) -> None:
     phases: Dict[str, List[str]] = {}
     for epic in project.epics:
         for story in epic.stories:
-            phases.setdefault(story.phase, []).append(f"{story.story_id} [{story.priority}] — {story.full_text[:60]}...")
+            _text  = story.full_text
+            _short = _text[:60] + ("..." if len(_text) > 60 else "")
+            phases.setdefault(story.phase, []).append(f"{story.story_id} [{story.priority}] — {_short}")
 
     for phase, items in sorted(phases.items()):
         print(f"\n  {C.BOLD}Phase: {phase}{C.RESET} ({len(items)} stories)")
