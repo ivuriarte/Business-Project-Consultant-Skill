@@ -47,6 +47,23 @@ def success(text: str):
     print(f"\n{C.GREEN}✓ {text}{C.RESET}")
 
 
+# ─── Vague Answer Nudge ──────────────────────────────────────────────────────
+_VAGUE_PHRASES = ("i don't know", "i do not know", "not sure", "idk", "n/a", "na", "tbd", "dunno")
+
+
+def nudge_if_vague(text: str) -> str:
+    """Non-blocking nudge when an answer looks too short or vague."""
+    is_short = len(text.strip()) < 15
+    is_vague = any(phrase in text.lower() for phrase in _VAGUE_PHRASES)
+    if is_short or is_vague:
+        print(f"\n{C.YELLOW}  ⚠ That's a bit short — can you be more specific?{C.RESET}")
+        print(f"{C.DIM}  Press Enter to keep it, or type a better answer:{C.RESET}")
+        better = input("  → ").strip()
+        if better:
+            return better
+    return text
+
+
 # ─── Data Models ────────────────────────────────────────────────────────────
 class AcceptanceCriteria:
     def __init__(self, given: str, when: str, then: str):
@@ -160,9 +177,9 @@ def intake_project() -> Project:
     )
 
     name = prompt("What is the name of this app or project?")
-    problem = prompt(
+    problem = nudge_if_vague(prompt(
         "What problem does this solve?\n  (e.g. 'Freelancers lose track of client invoices')"
-    )
+    ))
     target_user = prompt(
         "Who is the primary user?\n  (e.g. 'Freelance designers aged 25-40 who work remotely')"
     )
@@ -245,7 +262,11 @@ def collect_stories(epic: Epic, story_counter: List[int]) -> None:
             break
 
         action  = prompt("Story — What do they want to DO?")
-        outcome = prompt("Story — Why? What OUTCOME do they get?")
+        _raw_outcome = prompt("Story — Why? What OUTCOME do they get?\n  (e.g. 'they can track their spending without using a spreadsheet')")
+        # Strip leading 'so that' / 'so' — the full_text template adds it
+        _raw_outcome = re.sub(r'^so\s+that\s+', '', _raw_outcome.strip(), flags=re.IGNORECASE).strip()
+        _raw_outcome = re.sub(r'^so\s+', '', _raw_outcome.strip(), flags=re.IGNORECASE).strip()
+        outcome = nudge_if_vague(_raw_outcome)
 
         priority    = select_option("Priority (MoSCoW)", PRIORITY_OPTIONS)
         effort      = select_option("Effort Estimate", EFFORT_OPTIONS)
@@ -295,9 +316,9 @@ def collect_epics(project: Project) -> None:
                 continue
             break
 
-        bv = prompt(
+        bv = nudge_if_vague(prompt(
             f"Epic #{idx} — Business Value statement\n  (Why does this capability matter?)"
-        )
+        ))
         epic_id = f"EP{idx:02d}"
         epic = Epic(epic_id=epic_id, name=epic_name, business_value=bv)
 
@@ -380,13 +401,9 @@ def render_greatest_value_prompt(project: Project) -> str:
     lines.append("Task for the developer:")
     lines.append("Implement the following feature with these exact requirements.")
     lines.append("")
-    lines.append("Functional Requirements:")
+    lines.append("Acceptance Criteria (all must pass before marking done):")
     for i, ac in enumerate(story.ac, 1):
         lines.append(f"{i}. {ac.to_text()}")
-    lines.append("")
-    lines.append("Acceptance Criteria (verify all before marking done):")
-    for ac in story.ac:
-        lines.append(f"- GIVEN {ac.given}, WHEN {ac.when}, THEN {ac.then}.")
     lines.append("")
     lines.append("Non-Functional Requirements:")
     lines.append("- The implementation must not break existing functionality.")

@@ -51,6 +51,23 @@ def warn(text: str):
     print(f"\n{C.RED}⚠ {text}{C.RESET}")
 
 
+# ─── Vague Answer Nudge ──────────────────────────────────────────────────────
+_VAGUE_PHRASES = ("i don't know", "i do not know", "not sure", "idk", "n/a", "na", "tbd", "dunno")
+
+
+def nudge_if_vague(text: str) -> str:
+    """Non-blocking nudge when an answer looks too short or vague."""
+    is_short = len(text.strip()) < 15
+    is_vague = any(phrase in text.lower() for phrase in _VAGUE_PHRASES)
+    if is_short or is_vague:
+        print(f"\n{C.YELLOW}  ⚠ That's a bit short — can you be more specific?{C.RESET}")
+        print(f"{C.DIM}  Press Enter to keep it, or type a better answer:{C.RESET}")
+        better = input("  → ").strip()
+        if better:
+            return better
+    return text
+
+
 # ─── Smart Priority & Rationale Resolution ───────────────────────────────────
 _RECOMMEND_TRIGGERS = (
     "don't know", "do not know", "not sure", "unsure", "idk", "no idea",
@@ -265,6 +282,7 @@ def elicit_business_requirements(session: ElicitationSession) -> None:
         ans = ask(q)
         if ans.lower() in ("done", "skip") or not ans:
             continue
+        ans = nudge_if_vague(ans)
         priority  = resolve_priority(source)
         rationale = resolve_rationale(source)
         session.add_requirement("Business", ans, priority, rationale, source)

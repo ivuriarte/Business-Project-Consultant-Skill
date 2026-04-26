@@ -177,7 +177,7 @@ class ProjectPlan:
 
 # ─── Effort Parsing ───────────────────────────────────────────────────────────
 EFFORT_MAP = {
-    "xs": 0.5, "s": 1, "m": 3, "l": 7, "xl": 14,
+    "xs": 1, "s": 2, "m": 4, "l": 7, "xl": 14,
     "1": 1, "2": 2, "3": 3, "5": 5, "8": 8, "13": 13,
 }
 
@@ -338,7 +338,7 @@ def render_plan(plan: ProjectPlan) -> str:
     for p in plan.phases:
         start = p.start_offset_weeks + 1
         end   = p.start_offset_weeks + p.duration_weeks
-        lines.append(f"| {p.display_name} | Week {start} | Week {end} | {p.duration_weeks}w | {p.goal[:60]} |")
+        lines.append(f"| {p.display_name} | Week {start} | Week {end} | {p.duration_weeks}w | {p.goal} |")
     lines.append("")
 
     for p in plan.phases:
@@ -357,7 +357,7 @@ def render_plan(plan: ProjectPlan) -> str:
             lines.append("| Feature | Priority | Effort | Rationale |")
             lines.append("|---|---|---|---|")
             for f in p.features:
-                lines.append(f"| {f.name} | {f.priority} | {f.effort} | {f.rationale[:60]} |")
+                lines.append(f"| {f.name} | {f.priority} | {f.effort} | {f.rationale} |")
             lines.append("")
 
         if p.milestones:
@@ -400,12 +400,14 @@ def render_gantt(plan: ProjectPlan) -> str:
     for phase in plan.phases:
         lines.append(f"    section {phase.display_name}")
         phase_start = start_dt + timedelta(weeks=phase.start_offset_weeks)
+        running_date = phase_start
         for feat in phase.features:
-            days   = int(effort_days(feat.effort))
+            days   = max(1, int(effort_days(feat.effort)))
             f_name = feat.name.replace(",", " -")
             lines.append(
-                f"    {f_name} : {phase_start.strftime('%Y-%m-%d')}, {max(1, days)}d"
+                f"    {f_name} : {running_date.strftime('%Y-%m-%d')}, {days}d"
             )
+            running_date += timedelta(days=days)
         for ms in phase.milestones:
             ms_date = start_dt + timedelta(weeks=ms.target_week - 1)
             lines.append(f"    {ms.name} : milestone, {ms_date.strftime('%Y-%m-%d')}, 0d")
