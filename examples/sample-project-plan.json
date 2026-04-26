@@ -1,0 +1,122 @@
+{
+  "skill_version": "1.0.0",
+  "project_name": "FreelanceFlow",
+  "product_owner": "Ian Vince",
+  "start_date": "2026-05-05",
+  "team_size": "1 (solo developer)",
+  "phases": [
+    {
+      "name": "discovery",
+      "display_name": "Phase 1: Discovery",
+      "duration_weeks": 1,
+      "goal": "Validate the problem, define the MVP scope, and set up the development environment",
+      "features": [
+        "User interviews with 5 freelancers to validate invoice pain points",
+        "Define MVP user stories and acceptance criteria",
+        "Set up Next.js, Supabase, Tailwind CSS project skeleton",
+        "Configure CI/CD pipeline and Vercel deployment"
+      ],
+      "milestones": [
+        "Discovery sign-off: MVP scope locked, all stories defined in backlog"
+      ],
+      "risks": [
+        {
+          "risk": "User interviews reveal a different core pain point",
+          "mitigation": "Adjust scope before committing to MVP build"
+        }
+      ],
+      "decision_points": [
+        "Go/No-go: Is the problem validated and the scope achievable in 4 weeks solo?"
+      ],
+      "start_offset_weeks": 0
+    },
+    {
+      "name": "mvp",
+      "display_name": "Phase 2: MVP",
+      "duration_weeks": 4,
+      "goal": "Build and deploy the core invoicing workflow: auth, invoice CRUD, PDF export, and status tracking",
+      "features": [
+        "Email/password registration and login (Supabase Auth)",
+        "Create invoice with client name, line items, totals, due date",
+        "Invoice list view with status filter (Draft / Sent / Paid / Overdue)",
+        "Edit and delete draft invoices",
+        "Mark invoice as sent and paid",
+        "Export invoice as PDF (React-PDF or similar)",
+        "Client management (add, edit, list clients)",
+        "Overdue invoice detection (automated status update)",
+        "Basic dashboard: total outstanding, total paid this month"
+      ],
+      "milestones": [
+        "Week 2: Auth + Invoice CRUD complete, deployed to Vercel staging",
+        "Week 4: All MVP features shipped, alpha testers invited"
+      ],
+      "risks": [
+        {
+          "risk": "PDF generation is more complex than estimated",
+          "mitigation": "Use a proven library (React-PDF); limit to 1 template for MVP"
+        },
+        {
+          "risk": "Supabase Row-Level Security misconfiguration exposes user data",
+          "mitigation": "RLS policies reviewed and tested before any alpha user is onboarded"
+        }
+      ],
+      "decision_points": [
+        "Go/No-go alpha launch: All MVP stories done, no critical bugs, RLS security tested"
+      ],
+      "start_offset_weeks": 1
+    },
+    {
+      "name": "stabilization",
+      "display_name": "Phase 3: Stabilization",
+      "duration_weeks": 2,
+      "goal": "Run alpha with 20–50 testers, fix critical bugs, and collect feedback",
+      "features": [
+        "Alpha feedback form embedded in app",
+        "Error monitoring setup (Sentry)",
+        "Performance audit (Lighthouse, Core Web Vitals)",
+        "Bug fixes from alpha feedback (critical and high priority only)",
+        "Basic empty states and onboarding copy for first-time users"
+      ],
+      "milestones": [
+        "Alpha launch: 20 testers onboarded",
+        "Alpha close: Feedback report completed, Beta scope defined"
+      ],
+      "risks": [
+        {
+          "risk": "Alpha feedback invalidates a core feature assumption",
+          "mitigation": "Treat as a learning, not a failure — adjust Beta scope accordingly"
+        }
+      ],
+      "decision_points": [
+        "Go/No-go Beta: Are alpha users actually sending invoices? Is the core loop working?"
+      ],
+      "start_offset_weeks": 5
+    },
+    {
+      "name": "enhancement",
+      "display_name": "Phase 4: Enhancement",
+      "duration_weeks": 3,
+      "goal": "Implement highest-value features identified during alpha",
+      "features": [
+        "Automated payment reminder emails (scheduled via Supabase Edge Functions)",
+        "Invoice templates (select from 2–3 visual styles)",
+        "Recurring invoice support",
+        "CSV export of invoice history",
+        "Public invoice link (shareable URL, no login required for client)"
+      ],
+      "milestones": [
+        "Beta launch: All Enhancement features shipped to waitlist"
+      ],
+      "risks": [
+        {
+          "risk": "Recurring invoice scheduling is complex to implement correctly",
+          "mitigation": "Start with a simple RRULE-based implementation; defer edge cases to V1.1"
+        }
+      ],
+      "decision_points": [
+        "Go/No-go Pro launch: Are users willing to pay for the Pro tier features?"
+      ],
+      "start_offset_weeks": 7
+    }
+  ]
+}

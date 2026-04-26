@@ -49,6 +49,9 @@ cp -r business-project-consultant/ ~/.agents/skills/
 ```
 
 **Windows (PowerShell):**
+
+> First, open PowerShell and navigate (`cd`) into the folder where you cloned or extracted this repository, so that `business-project-consultant\` is a visible subdirectory. Then run:
+
 ```powershell
 Copy-Item -Recurse business-project-consultant\ $env:USERPROFILE\.agents\skills\
 ```
@@ -92,7 +95,7 @@ business-project-consultant/
 
 ## The 3 Interactive Scripts
 
-Run these from your terminal in any project directory. Each script saves its output as `.md` and `.json` files in the current directory.
+Run these from your terminal in any project directory. Each script saves its output as `.md` and `.json` files in the directory where you run the command — so run from your project root, not from inside `scripts/`.
 
 ### Recommended Order
 
@@ -107,7 +110,7 @@ Run these from your terminal in any project directory. Each script saves its out
 ### Script 1 — Requirements Elicitor
 
 ```bash
-python scripts/requirements_elicitor.py
+python3 scripts/requirements_elicitor.py
 ```
 
 A guided Q&A that uncovers Business, Functional, Non-Functional, Constraint, and Assumption requirements from any idea. Prevents the most common mistake in software projects: building the wrong thing.
@@ -123,7 +126,7 @@ A guided Q&A that uncovers Business, Functional, Non-Functional, Constraint, and
 ### Script 2 — Idea to Backlog
 
 ```bash
-python scripts/idea_to_backlog.py
+python3 scripts/idea_to_backlog.py
 ```
 
 An interactive wizard that takes your raw idea and produces a full prioritized backlog: Epics → User Stories → Acceptance Criteria. Automatically scores every story using the Value Scoring Matrix and outputs a **Greatest Value Prompt** — the single highest-ROI developer task, ready to paste into Copilot.
@@ -140,7 +143,7 @@ An interactive wizard that takes your raw idea and produces a full prioritized b
 ### Script 3 — Project Planner
 
 ```bash
-python scripts/project_planner.py
+python3 scripts/project_planner.py
 ```
 
 Builds a phased development plan (Discovery → MVP → Stabilization → Enhancement → Growth) with goals, feature lists, milestones, risks, decision points, and a Mermaid Gantt chart.

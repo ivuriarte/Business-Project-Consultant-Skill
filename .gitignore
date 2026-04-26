@@ -1,0 +1,29 @@
+# Generated script outputs
+# These files are produced when running the interactive wizards.
+# They contain project-specific work and should NOT be committed to this repo.
+*-backlog-*.md
+*-backlog-*.json
+*-greatest-value-prompt-*.md
+*-requirements-*.md
+*-requirements-*.json
+*-project-plan-*.md
+*-project-plan-*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

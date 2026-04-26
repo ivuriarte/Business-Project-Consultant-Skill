@@ -1,0 +1,105 @@
+{
+  "skill_version": "1.0.0",
+  "project": "FreelanceFlow",
+  "created_at": "2026-04-27 09:14",
+  "problem_statement": "Freelancers lose hours every week manually tracking invoices in spreadsheets, chasing late payments, and sending follow-ups by hand",
+  "target_user": "Freelance designers and developers aged 25–40 who work remotely and manage 3–10 active clients at a time",
+  "success_definition": "100 active users, average 3 invoices sent per user per week, < 5% support tickets related to invoicing",
+  "tech_stack": "Next.js, Supabase, Tailwind CSS",
+  "epics": [
+    {
+      "id": "EP01",
+      "name": "User Authentication",
+      "business_value": "Without an identity layer, users cannot have personal data — every invoice, client, and payment record must be tied to a verified account.",
+      "stories": [
+        {
+          "id": "EP01-S01",
+          "text": "As a new user, I want to register with my email and password, so that I can create a personal account.",
+          "priority": "Must Have",
+          "effort": "S (1–2 days)",
+          "phase": "MVP",
+          "value_score": 4.8,
+          "scores": {
+            "business_value": 5,
+            "user_impact": 5,
+            "feasibility": 4
+          },
+          "acceptance_criteria": [
+            {
+              "given": "I am on the registration page",
+              "when": "I fill in a valid email and a password of 8+ characters and click Create Account",
+              "then": "my account is created, I am logged in, and I am redirected to the dashboard"
+            },
+            {
+              "given": "I enter an email that is already registered",
+              "when": "I click Create Account",
+              "then": "I see the error This email is already in use. Try logging in. and the form is not submitted"
+            },
+            {
+              "given": "I enter a password fewer than 8 characters",
+              "when": "I click Create Account",
+              "then": "I see the inline error Password must be at least 8 characters and the form is not submitted"
+            }
+          ]
+        },
+        {
+          "id": "EP01-S02",
+          "text": "As a returning user, I want to log in with my email and password, so that I can access my invoices and client data.",
+          "priority": "Must Have",
+          "effort": "S (1–2 days)",
+          "phase": "MVP",
+          "value_score": 4.8,
+          "scores": {
+            "business_value": 5,
+            "user_impact": 5,
+            "feasibility": 4
+          },
+          "acceptance_criteria": [
+            {
+              "given": "I am on the login page",
+              "when": "I enter a valid email and password and click Log In",
+              "then": "I am authenticated and redirected to my dashboard"
+            },
+            {
+              "given": "I enter an incorrect password",
+              "when": "I click Log In",
+              "then": "I see the error Incorrect email or password. and I am not logged in"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EP02",
+      "name": "Invoice Management",
+      "business_value": "Invoicing is the core function of the app. Without it, there is no product.",
+      "stories": [
+        {
+          "id": "EP02-S03",
+          "text": "As a freelancer, I want to create a new invoice with line items, so that I can bill my clients professionally.",
+          "priority": "Must Have",
+          "effort": "M (3–5 days)",
+          "phase": "MVP",
+          "value_score": 5.0,
+          "scores": {
+            "business_value": 5,
+            "user_impact": 5,
+            "feasibility": 5
+          },
+          "acceptance_criteria": [
+            {
+              "given": "I am on the invoice creation page",
+              "when": "I fill in client name, line items and click Save Invoice",
+              "then": "the invoice is saved with a unique auto-generated invoice number and a Draft status"
+            },
+            {
+              "given": "I add a line item",
+              "when": "I enter quantity and rate",
+              "then": "the subtotal and invoice total are calculated automatically"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

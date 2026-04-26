@@ -1,0 +1,113 @@
+{
+  "skill_version": "1.0.0",
+  "project": "FreelanceFlow",
+  "created_at": "2026-04-27 08:45",
+  "context": "FreelanceFlow is a web application that helps freelancers create, send, and track invoices. It replaces manual spreadsheet-based invoicing with a streamlined digital workflow.",
+  "target_users": "Freelance designers and developers aged 25–40 who work remotely, manage 3–10 active clients, and currently track invoices in Excel or Google Sheets.",
+  "primary_goal": "Allow a freelancer to create and send a professional invoice to a client in under 5 minutes, and automatically track its payment status.",
+  "out_of_scope": [
+    "Native mobile app (iOS / Android) — deferred to post-Beta",
+    "Stripe or payment gateway integration — deferred to V1.1",
+    "Multi-user / team accounts — deferred to V2",
+    "Accounting software integrations (QuickBooks, Xero) — deferred to V2",
+    "Tax calculation or VAT/GST handling — deferred to V1.1"
+  ],
+  "stakeholders": [
+    {
+      "name": "Ian Vince",
+      "role": "Business Owner / Solo Developer",
+      "interest": "Ship a working MVP that validates the invoicing pain point",
+      "influence": "High"
+    },
+    {
+      "name": "Alpha Test Users",
+      "role": "End Users",
+      "interest": "Easy invoicing, fewer late payments, professional look",
+      "influence": "High"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "BR-001",
+      "type": "Business",
+      "description": "The business must reduce the average time a freelancer spends on invoicing from 3 hours/week to under 30 minutes/week",
+      "priority": "Must Have",
+      "rationale": "Core business outcome",
+      "source": "Business Outcome",
+      "status": "Pending"
+    },
+    {
+      "id": "FR-001",
+      "type": "Functional",
+      "description": "The system must allow a user to create an invoice with client name, line items, auto-calculated totals, and a due date",
+      "priority": "Must Have",
+      "rationale": "Core function of the app",
+      "source": "Create Operations",
+      "status": "Pending"
+    },
+    {
+      "id": "FR-002",
+      "type": "Functional",
+      "description": "The system must allow a user to view a list of all invoices filtered by status (Draft / Sent / Paid / Overdue)",
+      "priority": "Must Have",
+      "rationale": "Users must be able to track what has happened to each invoice",
+      "source": "Read Operations",
+      "status": "Pending"
+    },
+    {
+      "id": "FR-006",
+      "type": "Functional",
+      "description": "The system must support email/password registration and login, with email verification",
+      "priority": "Must Have",
+      "rationale": "Users must have accounts before any personal data can be stored",
+      "source": "Auth & Access",
+      "status": "Pending"
+    },
+    {
+      "id": "NFR-001",
+      "type": "Non-Functional",
+      "description": "Invoice list and dashboard must load within 2 seconds under normal load (< 500 concurrent users)",
+      "priority": "Should Have",
+      "rationale": "Performance",
+      "source": "Performance",
+      "status": "Pending"
+    },
+    {
+      "id": "NFR-004",
+      "type": "Non-Functional",
+      "description": "All passwords must be hashed. All data in transit must use HTTPS/TLS. OWASP Top 10 must be addressed before launch.",
+      "priority": "Must Have",
+      "rationale": "Security",
+      "source": "Security",
+      "status": "Pending"
+    },
+    {
+      "id": "CON-001",
+      "type": "Constraint",
+      "description": "The tech stack is fixed: Next.js (App Router), Supabase (Auth + DB), Tailwind CSS, Vercel (hosting)",
+      "priority": "Must Have",
+      "rationale": "Hard limit on design/build",
+      "source": "Constraints Workshop",
+      "status": "Pending"
+    },
+    {
+      "id": "ASS-001",
+      "type": "Assumption",
+      "description": "Users have basic digital literacy — they can fill in a web form, use a browser, and read an email",
+      "priority": "Could Have",
+      "rationale": "Needs validation before shipping",
+      "source": "Assumption Log",
+      "status": "Pending"
+    }
+  ],
+  "constraints": [
+    "The tech stack is fixed: Next.js (App Router), Supabase (Auth + DB), Tailwind CSS, Vercel (hosting)",
+    "The MVP must be shipped within 6 weeks with a solo developer",
+    "The total operating budget for MVP is under $50/month"
+  ],
+  "assumptions": [
+    "Users have basic digital literacy",
+    "Supabase free tier is sufficient for MVP load",
+    "Freelancers are willing to pay for a Pro plan if the free tier proves value"
+  ]
+}

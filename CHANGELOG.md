@@ -7,6 +7,27 @@ Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 
 ---
 
+## [1.0.1] — 2026-04-27
+
+### Fixed
+- `SKILL.md` and `README.md`: Changed all `python scripts/...` references to `python3 scripts/...` to ensure macOS/Linux compatibility
+- `README.md`: Clarified Windows PowerShell install path to specify running from the cloned repository folder
+- `README.md`: Clarified that script output files are saved to the current working directory (not inside `scripts/`)
+
+### Added
+- `scripts/idea_to_backlog.py`: `argparse` `--help` and `--version` flags; `SKILL_VERSION` constant stamped into all output files; absolute file paths printed on save; `KeyboardInterrupt` handling with clean exit message; UTF-8 encoding on all file writes
+- `scripts/requirements_elicitor.py`: Same improvements as above
+- `scripts/project_planner.py`: Same improvements as above
+- `examples/sample-backlog.json`: JSON output sample for `idea_to_backlog.py`
+- `examples/sample-requirements.json`: JSON output sample for `requirements_elicitor.py`
+- `examples/sample-project-plan.json`: JSON output sample for `project_planner.py`
+- `SECURITY.md`: Security policy documenting local-only execution model and vulnerability reporting process
+- `.python-version`: Minimum supported Python version (`3.8`)
+- `Makefile`: Convenience targets `make requirements`, `make backlog`, `make plan`, `make check`, `make clean`
+- `.gitignore`: Prevent generated output files and OS/editor artifacts from being committed
+
+---
+
 ## [1.0.0] — 2026-04-27
 
 ### Added

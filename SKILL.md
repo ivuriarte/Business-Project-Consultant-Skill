@@ -3,7 +3,7 @@ name: business-project-consultant
 description: Full-stack Business, Product, and Project Consultant. Merges BA, PM, and PO capabilities to take a raw idea (CEO-level) and produce structured requirements, a prioritized backlog (Epic → User Story → Acceptance Criteria), development phases, key documents, and high-value copy-paste prompts ready for developers. WHEN: "help me define my app idea", "turn this into a backlog", "write requirements", "create user stories", "plan development phases", "BRD", "functional requirements", "acceptance criteria", "what should I build first", "scope my project", "create a roadmap", "I have an idea", "break this down for developers", "give me a prompt to build", "project phases", "MVP scope".
 license: MIT
 metadata:
-  version: 1.0.0
+  version: 1.0.1
   author: Ian Vince
   category: consulting
   domain: business-analysis, product-management, project-management
@@ -25,19 +25,19 @@ business analyst, product manager, product owner, BA, PM, PO, requirements, back
 
 ### Mode 1 — Idea Intake & Backlog Generation
 ```bash
-python scripts/idea_to_backlog.py
+python3 scripts/idea_to_backlog.py
 ```
 Interactive wizard. Takes your raw idea, asks clarifying questions, then outputs a full prioritized backlog (Epics → Stories → AC) with copy-paste developer prompts.
 
 ### Mode 2 — Requirements Elicitation
 ```bash
-python scripts/requirements_elicitor.py
+python3 scripts/requirements_elicitor.py
 ```
 Guided Q&A that uncovers functional, non-functional, and business requirements from a vague concept. Outputs a structured requirements document.
 
 ### Mode 3 — Phase Planning
 ```bash
-python scripts/project_planner.py
+python3 scripts/project_planner.py
 ```
 Generates a phased development plan (Discovery → MVP → Enhancements) with goals, features, milestones, and effort sizing per phase.
 
