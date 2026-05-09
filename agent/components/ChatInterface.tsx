@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat, type Message } from 'ai/react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import type { AgentSession, Epic, ProjectMeta } from '@/lib/types';
 import { MessageBubble } from './MessageBubble';
 import { BacklogPanel } from './BacklogPanel';
@@ -29,6 +29,7 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
   });
   const [copied, setCopied]         = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const initialMessages: Message[] = (initialSession?.messages ?? []).map((m, i) => ({
     id: `init-${i}`,
@@ -36,7 +37,7 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
     content: m.content,
   }));
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error, append } = useChat({
     api: '/api/chat',
     body: { sessionId },
     initialMessages,
@@ -77,6 +78,10 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
     },
     [handleSubmit, isLoading, input]
   );
+
+  const handleStarterSelect = useCallback((text: string) => {
+    void append({ role: 'user', content: text });
+  }, [append]);
 
   const copySessionLink = useCallback(() => {
     const url = `${window.location.origin}/?s=${sessionId}`;
@@ -124,6 +129,8 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
           onCopyLink={copySessionLink}
           copied={copied}
           onClose={() => setSidebarOpen(false)}
+          onOpenTemplates={() => setShowTemplates(true)}
+          onSelectExample={handleStarterSelect}
         />
       </div>
 
@@ -141,10 +148,18 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
             <MenuIcon />
           </button>
 
-          {/* Logo — visible on mobile where sidebar is hidden */}
-          <span className="md:hidden font-mono text-sm font-semibold text-text-primary">
-            Idea <span className="text-accent">→</span> Agent
-          </span>
+          {/* Frank — visible on mobile where sidebar is hidden */}
+          <span className="md:hidden font-semibold text-sm text-agent-violet">Frank</span>
+
+          {/* Stage header — desktop */}
+          {STAGE_HEADER[backlog.stage] && (
+            <div className="hidden md:block">
+              <div className="text-sm font-semibold text-text-primary leading-tight">
+                {STAGE_HEADER[backlog.stage].label}
+              </div>
+              <div className="text-[10px] text-text-muted">{STAGE_HEADER[backlog.stage].desc}</div>
+            </div>
+          )}
 
           <div className="flex-1" />
 
@@ -171,7 +186,7 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
           aria-label="Conversation"
           className="flex-1 overflow-y-auto py-6"
         >
-          {messages.length === 0 && !isLoading && <WelcomeScreen />}
+          {messages.length === 0 && !isLoading && <WelcomeScreen onSelect={handleStarterSelect} />}
 
           <div className="max-w-3xl mx-auto space-y-0.5">
             {messages.map(msg => (
@@ -195,103 +210,197 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
 
         {/* ── Input ───────────────────────────────────────────────── */}
         <div className="shrink-0 px-4 pb-4 pt-3 border-t border-border bg-surface">
-          <form
-            onSubmit={handleSubmit}
-            className="flex items-end gap-3 max-w-3xl mx-auto"
-          >
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Describe your idea or answer the question above…"
-              rows={1}
-              disabled={isLoading}
-              aria-label="Message input"
-              className="
-                flex-1 resize-none rounded-xl border border-border bg-surface-2
-                px-4 py-3 text-sm text-text-primary placeholder-text-muted
-                focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/10
-                transition-all disabled:opacity-50 min-h-[44px] max-h-44
-              "
-              style={{ height: 'auto' }}
-              onInput={e => {
-                const el = e.currentTarget;
-                el.style.height = 'auto';
-                el.style.height = `${Math.min(el.scrollHeight, 176)}px`;
-              }}
+          {showTemplates && (
+            <TemplatesPicker
+              onSelect={(t) => { handleStarterSelect(t); setShowTemplates(false); }}
+              onClose={() => setShowTemplates(false)}
             />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              aria-label="Send message"
-              className="
-                shrink-0 h-11 px-5 rounded-xl bg-accent hover:bg-accent-dim
-                disabled:opacity-30 disabled:cursor-not-allowed
-                text-accent-fg text-sm font-semibold font-mono
-                transition-all active:scale-95
-              "
-            >
-              {isLoading ? '…' : '→'}
-            </button>
+          )}
+          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+            <div className="rounded-xl border border-border bg-surface-2 focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe your idea or answer Frank's question…"
+                rows={1}
+                disabled={isLoading}
+                aria-label="Message input"
+                className="w-full resize-none bg-transparent px-4 pt-3 pb-2 text-sm text-text-primary placeholder-text-muted focus:outline-none disabled:opacity-50 min-h-[44px] max-h-44"
+                style={{ height: 'auto' }}
+                onInput={e => {
+                  const el = e.currentTarget;
+                  el.style.height = 'auto';
+                  el.style.height = `${Math.min(el.scrollHeight, 176)}px`;
+                }}
+              />
+              {/* Action row */}
+              <div className="flex items-center gap-1 px-3 pb-3">
+                <InputAction icon={<AttachIcon />} label="Attach" disabled title="File upload — coming soon" />
+                <InputAction icon={<ContextIcon />} label="Add context" disabled title="Context injection — coming soon" />
+                <InputAction icon={<TemplateSmIcon />} label="Templates" onClick={() => setShowTemplates(v => !v)} />
+                <div className="flex-1" />
+                <button
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                  aria-label="Send message"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent hover:bg-accent-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shrink-0"
+                >
+                  <SendIcon />
+                </button>
+              </div>
+            </div>
+            <p className="text-center text-text-muted text-[10px] font-mono mt-2 tracking-wide">
+              Enter to send · Shift+Enter for new line
+            </p>
           </form>
-          <p className="text-center text-text-muted text-[10px] font-mono mt-2 tracking-wide">
-            Enter to send · Shift+Enter for new line
-          </p>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Welcome screen ───────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const STAGE_HEADER: Record<string, { label: string; desc: string }> = {
+  welcome:           { label: 'Welcome',            desc: 'Introduce your idea to Frank' },
+  business_intent:   { label: 'Business Intent',    desc: 'Why does this idea matter?' },
+  intake:            { label: 'Requirements Intake', desc: 'Define the problem space' },
+  backlog_generated: { label: 'Backlog Generated',   desc: 'Your epics & stories are ready' },
+  export:            { label: 'Export',              desc: 'Push your backlog to GitHub' },
+};
 
 const STARTERS = [
-  'I want to build an app that helps freelancers track invoices automatically…',
-  'I have an idea for a platform where local farmers can sell directly to consumers…',
-  'I want to automate the employee onboarding process at my company…',
+  { label: 'Invoice tracker for freelancers', text: 'I want to build an app that helps freelancers track invoices automatically.' },
+  { label: 'Farm-to-consumer marketplace',   text: 'I have an idea for a platform where local farmers can sell directly to consumers.' },
+  { label: 'Employee onboarding automation', text: 'I want to automate the employee onboarding process at my company.' },
 ];
 
-function WelcomeScreen() {
+const TEMPLATES = [
+  { label: 'SaaS Product',           text: 'I want to build a SaaS product that [does X] for [target users].' },
+  { label: 'Internal Tool',          text: 'I want to build an internal tool for my team to [automate/streamline X].' },
+  { label: 'Marketplace',            text: 'I want to create a marketplace that connects [buyers] with [sellers].' },
+  { label: 'Mobile App',             text: 'I want to build a mobile app that helps [users] do [X].' },
+  { label: 'API / Platform',         text: 'I want to build an API/platform that enables developers to [X].' },
+];
+
+const FEATURES = [
+  { icon: '🎯', label: 'Strategic' },
+  { icon: '📋', label: 'Structured' },
+  { icon: '📊', label: 'Prioritised' },
+  { icon: '🚀', label: 'GitHub-ready' },
+];
+
+// ─── Welcome screen ───────────────────────────────────────────────────────────
+
+function WelcomeScreen({ onSelect }: { onSelect: (text: string) => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-6 animate-fade-in select-none">
-      {/* Brand mark */}
-      <div className="mb-8">
-        <div className="font-mono text-5xl font-bold text-accent tracking-tight">→</div>
-        <div className="font-mono text-sm font-semibold text-text-primary mt-2 tracking-tight">
-          Idea → Agent
-        </div>
-        <div className="text-text-muted text-xs font-mono mt-1 tracking-wide">
-          Raw idea. Developer-ready backlog.
-        </div>
+      {/* Greeting */}
+      <div className="mb-6">
+        <div className="text-4xl mb-3">👋</div>
+        <h1 className="text-2xl font-bold text-text-primary leading-tight">
+          Hi, I'm <span className="text-agent-violet">Frank</span>
+        </h1>
+        <p className="text-text-muted text-sm mt-2 max-w-xs leading-relaxed">
+          Your AI Business &amp; Project Consultant. I turn raw ideas into developer-ready backlogs.
+        </p>
       </div>
 
-      {/* Description */}
-      <p className="text-text-secondary text-sm max-w-xs leading-relaxed mb-8">
-        Describe your idea — rough is fine. I'll guide you through a structured BA/PM/PO process
-        to produce prioritized Epics, User Stories, and Acceptance Criteria.
-      </p>
-
-      {/* Starter prompts */}
-      <div className="w-full max-w-sm space-y-2">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-3">Try saying…</p>
-        {STARTERS.map(s => (
-          <div
-            key={s}
-            className="px-4 py-2.5 rounded-lg border border-border bg-surface text-left text-xs text-text-muted leading-relaxed italic hover:border-accent/30 hover:text-text-secondary transition-colors cursor-default"
-          >
-            "{s}"
+      {/* Feature cards */}
+      <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-8">
+        {[
+          { icon: '🎯', label: 'Strategic Guidance',  color: 'border-agent-violet/30 bg-agent-violet/5' },
+          { icon: '📋', label: 'Project Planning',    color: 'border-blue-500/30 bg-blue-500/5' },
+          { icon: '📊', label: 'Prioritization',      color: 'border-success/30 bg-success/5' },
+          { icon: '🚀', label: 'Actionable Output',   color: 'border-accent/30 bg-accent/5' },
+        ].map(({ icon, label, color }) => (
+          <div key={label} className={`rounded-lg border p-3 text-left ${color}`}>
+            <div className="text-lg mb-1">{icon}</div>
+            <div className="text-xs font-medium text-text-secondary">{label}</div>
           </div>
         ))}
       </div>
 
-      {/* Legal links */}
-      <div className="mt-10 flex gap-4 text-[10px] text-text-muted font-mono">
-        <a href="/privacy" className="hover:text-accent transition-colors">Privacy</a>
-        <span>·</span>
-        <a href="/terms" className="hover:text-accent transition-colors">Terms</a>
+      {/* Starter prompts */}
+      <div className="w-full max-w-sm">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-3">
+          What would you like to start with?
+        </p>
+        <div className="space-y-2">
+          {STARTERS.map(s => (
+            <button
+              key={s.label}
+              onClick={() => onSelect(s.text)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-surface hover:border-agent-violet/40 hover:bg-surface-2 text-left text-xs text-text-secondary transition-colors group"
+            >
+              <span className="flex-1 leading-snug">{s.label}</span>
+              <span className="text-text-muted group-hover:text-agent-violet transition-colors shrink-0">→</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Feature pills */}
+      <div className="flex flex-wrap gap-2 justify-center mt-6">
+        {FEATURES.map(f => (
+          <span key={f.label} className="flex items-center gap-1 text-[10px] text-text-muted bg-surface-2 border border-border px-2.5 py-1 rounded-full">
+            {f.icon} {f.label}
+          </span>
+        ))}
+      </div>
+
+      {/* Privacy */}
+      <div className="mt-6 flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
+        <span>🔒</span>
+        <span>Sessions are private. No account needed.</span>
       </div>
     </div>
+  );
+}
+
+// ─── TemplatesPicker ─────────────────────────────────────────────────────────
+
+function TemplatesPicker({ onSelect, onClose }: { onSelect: (text: string) => void; onClose: () => void }) {
+  return (
+    <div className="mb-2 max-w-3xl mx-auto rounded-xl border border-border bg-surface-2 p-3 animate-fade-in">
+      <div className="flex items-center justify-between mb-2">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted">Templates</p>
+        <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs px-2">✕</button>
+      </div>
+      <div className="space-y-1">
+        {TEMPLATES.map(t => (
+          <button
+            key={t.label}
+            onClick={() => onSelect(t.text)}
+            className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface text-xs text-text-secondary hover:text-text-primary transition-colors group"
+          >
+            <span className="flex-1">{t.label}</span>
+            <span className="text-text-muted group-hover:text-accent transition-colors shrink-0 text-[10px] font-mono">use →</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── InputAction ─────────────────────────────────────────────────────────────
+
+function InputAction({ icon, label, onClick, disabled, title }: {
+  icon: ReactNode; label: string; onClick?: () => void; disabled?: boolean; title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      title={title}
+      disabled={disabled}
+      className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono text-text-muted hover:text-text-primary hover:bg-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -315,6 +424,40 @@ function TypingIndicator() {
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
+
+function SendIcon() {
+  return (
+    <svg className="w-4 h-4 text-accent-fg" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 8h12M9 3l5 5-5 5" />
+    </svg>
+  );
+}
+
+function AttachIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M12 6.5L6.5 12a3.5 3.5 0 01-5-5L7 1.5a2 2 0 013 3L4.5 10a.5.5 0 01-.7-.7L9.5 4" />
+    </svg>
+  );
+}
+
+function ContextIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="2" width="10" height="10" rx="1.5" />
+      <path d="M5 5h4M5 7h4M5 9h2" />
+    </svg>
+  );
+}
+
+function TemplateSmIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="2" width="10" height="10" rx="1.5" />
+      <path d="M2 5h10M5 5v7" />
+    </svg>
+  );
+}
 
 function MenuIcon() {
   return (

@@ -23,6 +23,7 @@ const config: Config = {
         'text-primary':   '#EDE8D8',
         'text-secondary': '#9490A8',
         'text-muted':     '#58566A',
+        'agent-violet':  '#A78BFA',
       },
       fontFamily: {
         sans:  ['var(--font-sans)', 'system-ui', 'sans-serif'],

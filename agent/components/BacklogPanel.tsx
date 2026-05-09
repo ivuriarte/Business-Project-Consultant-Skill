@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import type { AgentSession, Epic } from '@/lib/types';
 
@@ -15,7 +15,9 @@ interface BacklogPanelProps {
   sessionId: string;
   onCopyLink: () => void;
   copied: boolean;
-  onClose?: () => void; // mobile close button
+  onClose?: () => void;
+  onOpenTemplates?: () => void;
+  onSelectExample?: (text: string) => void;
 }
 
 const STAGES: { key: AgentSession['stage']; label: string; desc: string }[] = [
@@ -30,8 +32,23 @@ const STAGE_ORDER: Record<AgentSession['stage'], number> = {
   welcome: 0, business_intent: 1, intake: 2, backlog_generated: 3, export: 4,
 };
 
-export function BacklogPanel({ backlog, sessionId, onCopyLink, copied, onClose }: BacklogPanelProps) {
+const EXAMPLES = [
+  'I want to build an app that helps freelancers track invoices automatically.',
+  'I have an idea for a platform where local farmers can sell directly to consumers.',
+  'I want to automate the employee onboarding process at my company.',
+];
+
+export function BacklogPanel({
+  backlog,
+  sessionId,
+  onCopyLink,
+  copied,
+  onClose,
+  onOpenTemplates,
+  onSelectExample,
+}: BacklogPanelProps) {
   const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set());
+  const [showExamples, setShowExamples] = useState(false);
   const currentIdx = STAGE_ORDER[backlog.stage] ?? 0;
   const hasEpics = backlog.epics.length > 0;
   const totalStories = backlog.epics.reduce((n, e) => n + e.stories.length, 0);
@@ -48,34 +65,42 @@ export function BacklogPanel({ backlog, sessionId, onCopyLink, copied, onClose }
   return (
     <aside className="flex flex-col w-72 shrink-0 h-full bg-surface border-r border-border overflow-hidden">
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <div className="font-mono text-sm font-semibold tracking-tight text-text-primary">
-            Idea <span className="text-accent">→</span> Agent
+      {/* ── Header: Frank persona ────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-3 border-b border-border">
+        <div className="flex items-start justify-between">
+          {/* Avatar + name */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)' }}>
+              F
+            </div>
+            <div>
+              <div className="font-semibold text-sm text-text-primary leading-tight">Frank</div>
+              <div className="text-[10px] text-text-muted leading-tight">Business &amp; Project Consultant</div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onCopyLink}
-              title="Copy shareable session link"
-              className="text-[11px] font-mono text-text-muted hover:text-accent transition-colors flex items-center gap-1"
-            >
-              {copied ? (
-                <><span className="text-success">✓</span> Copied</>
-              ) : (
-                <><ShareIcon /> Share</>
-              )}
-            </button>
-            {/* Mobile close */}
+          {/* AI badge + close */}
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-agent-violet/30 bg-agent-violet/10 text-agent-violet uppercase tracking-wider">
+              AI Agent
+            </span>
             {onClose && (
-              <button onClick={onClose} className="md:hidden text-text-muted hover:text-text-primary ml-1">
+              <button onClick={onClose} className="md:hidden text-text-muted hover:text-text-primary">
                 <CloseIcon />
               </button>
             )}
           </div>
         </div>
-        <div className="font-mono text-[10px] text-text-muted truncate tracking-wider">
-          {sessionId}
+        {/* Share row */}
+        <div className="flex items-center justify-between mt-3">
+          <div className="font-mono text-[9px] text-text-muted truncate max-w-[120px]">{sessionId.slice(0, 16)}…</div>
+          <button
+            onClick={onCopyLink}
+            title="Copy shareable link"
+            className="text-[10px] font-mono flex items-center gap-1 text-text-muted hover:text-accent transition-colors"
+          >
+            {copied ? <><span className="text-success">✓</span> Copied</> : <><ShareIcon /> Share</>}
+          </button>
         </div>
       </div>
 
@@ -114,45 +139,99 @@ export function BacklogPanel({ backlog, sessionId, onCopyLink, copied, onClose }
         </div>
       </div>
 
-      {/* ── Project name ─────────────────────────────────────────────── */}
-      {backlog.project && (
-        <div className="px-5 py-3 border-b border-border">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Project</p>
-          <p className="text-sm font-semibold text-text-primary truncate">{backlog.project.name}</p>
-          {backlog.project.problem_statement && (
-            <p className="text-[11px] text-text-muted mt-1 leading-relaxed line-clamp-2">
-              {backlog.project.problem_statement}
-            </p>
+      {/* ── Quick Actions ─────────────────────────────────────────────── */}
+      <div className="px-4 py-3 border-b border-border">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-2">Quick Actions</p>
+        <div className="space-y-0.5">
+          <QuickAction
+            icon={<IdeaIcon />}
+            label="View Example Ideas"
+            active={showExamples}
+            onClick={() => setShowExamples(v => !v)}
+          />
+          {showExamples && (
+            <div className="mt-1 ml-6 space-y-1 pb-1">
+              {EXAMPLES.map((ex, i) => (
+                <button
+                  key={i}
+                  onClick={() => { onSelectExample?.(ex); setShowExamples(false); }}
+                  className="w-full text-left text-[10px] text-text-secondary hover:text-text-primary leading-snug py-1 px-2 rounded hover:bg-surface-2 transition-colors"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
           )}
+          <QuickAction
+            icon={<TemplateIcon />}
+            label="Templates"
+            onClick={onOpenTemplates}
+          />
+          <QuickAction
+            icon={<BacklogIcon />}
+            label="My Backlog"
+            disabled
+            disabledReason="Requires an account — coming soon"
+          />
+          <QuickAction
+            icon={<HistoryIcon />}
+            label="Export History"
+            disabled
+            disabledReason="Requires an account — coming soon"
+          />
         </div>
-      )}
+      </div>
 
-      {/* ── Epics ────────────────────────────────────────────────────── */}
+      {/* ── Scrollable main ───────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        {hasEpics ? (
-          <div className="py-2">
-            <p className="px-5 font-mono text-[9px] uppercase tracking-widest text-text-muted mb-2 mt-1">
-              Backlog
+        {!hasEpics ? (
+          /* About Frank */
+          <div className="px-5 py-6">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-3">About Frank</p>
+            <p className="text-xs text-text-secondary leading-relaxed mb-4">
+              Frank turns raw ideas into structured product backlogs — epics, user stories, and prioritised roadmaps — ready to ship to GitHub.
             </p>
-            {backlog.epics.map((epic, idx) => (
-              <EpicRow
-                key={epic.id}
-                epic={epic}
-                index={idx + 1}
-                expanded={expandedEpics.has(epic.id)}
-                onToggle={() => toggleEpic(epic.id)}
-              />
-            ))}
+            <div className="space-y-2">
+              {[
+                { icon: '🎯', text: 'Strategic requirements elicitation' },
+                { icon: '📋', text: 'Epic & story generation' },
+                { icon: '📊', text: 'MoSCoW prioritisation' },
+                { icon: '🚀', text: 'GitHub Projects export' },
+              ].map(({ icon, text }) => (
+                <div key={text} className="flex items-start gap-2.5">
+                  <span className="text-sm shrink-0 mt-px">{icon}</span>
+                  <span className="text-[11px] text-text-muted leading-snug">{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="px-5 py-8 text-center">
-            <div className="w-8 h-8 rounded-full border border-dashed border-border mx-auto mb-3 flex items-center justify-center">
-              <span className="text-text-muted text-xs font-mono">?</span>
+          /* Project + Epics */
+          <>
+            {backlog.project && (
+              <div className="px-5 py-3 border-b border-border">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Project</p>
+                <p className="text-sm font-semibold text-text-primary truncate">{backlog.project.name}</p>
+                {backlog.project.problem_statement && (
+                  <p className="text-[11px] text-text-muted mt-1 leading-relaxed line-clamp-2">
+                    {backlog.project.problem_statement}
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="py-2">
+              <p className="px-5 font-mono text-[9px] uppercase tracking-widest text-text-muted mb-2 mt-1">Backlog</p>
+              {backlog.epics.map((epic, idx) => (
+                <EpicRow
+                  key={epic.id}
+                  epic={epic}
+                  index={idx + 1}
+                  expanded={expandedEpics.has(epic.id)}
+                  onToggle={() => toggleEpic(epic.id)}
+                />
+              ))}
             </div>
-            <p className="text-text-muted text-xs leading-relaxed">
-              Your backlog will appear<br />once the agent generates it.
-            </p>
-          </div>
+          </>
         )}
       </div>
 
@@ -166,10 +245,43 @@ export function BacklogPanel({ backlog, sessionId, onCopyLink, copied, onClose }
           </div>
         </div>
       )}
+
+      {/* ── Settings footer ───────────────────────────────────────────── */}
+      <div className="px-4 py-3 border-t border-border flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
+        <SettingsIcon />
+        <span className="text-xs">Settings</span>
+      </div>
     </aside>
   );
 }
+// ─── QuickAction ──────────────────────────────────────────────────────────────────────────────
 
+function QuickAction({
+  icon, label, onClick, active, disabled, disabledReason,
+}: {
+  icon: ReactNode; label: string; onClick?: () => void;
+  active?: boolean; disabled?: boolean; disabledReason?: string;
+}) {
+  return (
+    <button
+      onClick={disabled ? undefined : onClick}
+      title={disabled ? disabledReason : undefined}
+      className={clsx(
+        'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-xs transition-colors text-left',
+        disabled
+          ? 'text-text-muted/40 cursor-not-allowed'
+          : active
+          ? 'bg-surface-2 text-text-primary'
+          : 'text-text-muted hover:text-text-primary hover:bg-surface-2 cursor-pointer',
+      )}
+    >
+      <span className={clsx('shrink-0', disabled && 'opacity-30')}>{icon}</span>
+      <span className="flex-1">{label}</span>
+      {!disabled && <ChevronRightIcon />}
+      {disabled && <span className="text-[9px] font-mono opacity-40">soon</span>}
+    </button>
+  );
+}
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
@@ -233,6 +345,58 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
       viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
     >
       <path d="M4 2l4 4-4 4" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg className="w-3 h-3 text-text-muted/50 shrink-0" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M4 2l4 4-4 4" />
+    </svg>
+  );
+}
+
+function IdeaIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="7" cy="6" r="3.5" />
+      <path d="M5.5 11h3M6 12.5h2" />
+    </svg>
+  );
+}
+
+function TemplateIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="2" width="10" height="10" rx="1.5" />
+      <path d="M2 5h10M5 5v7" />
+    </svg>
+  );
+}
+
+function BacklogIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M2 4h10M2 7h7M2 10h5" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="7" cy="7" r="5" />
+      <path d="M7 4.5V7l2 1.5" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="7" cy="7" r="2" />
+      <path d="M7 1.5v1M7 11.5v1M1.5 7h1M11.5 7h1M3.2 3.2l.7.7M10.1 10.1l.7.7M10.1 3.9l-.7.7M3.9 10.1l-.7.7" />
     </svg>
   );
 }

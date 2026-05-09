@@ -18,7 +18,7 @@ const sans = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Idea → Agent',
+  title: 'Frank — Business & Project Consultant',
   description:
     'Transform your raw idea into a developer-ready backlog with Epics, User Stories, and Acceptance Criteria.',
 };
