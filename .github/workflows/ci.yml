@@ -39,7 +39,14 @@ jobs:
 
       - name: Lint
         run: npx next lint --max-warnings 0
-        continue-on-error: true   # warns but doesn't block on lint-only issues
+
+      - name: Test
+        run: npm test
+        env:
+          UPSTASH_REDIS_REST_URL: https://stub.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: stub-token
+          OPENAI_API_KEY: sk-stub-000000000000000000000000000000000000000000000000
+          NEXT_PUBLIC_BASE_URL: https://example.com
 
       - name: Build
         run: npm run build

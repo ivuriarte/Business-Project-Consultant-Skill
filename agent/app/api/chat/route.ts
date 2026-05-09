@@ -34,7 +34,14 @@ const UserStorySchema = z.object({
   user_impact: z.number().int().min(1).max(5),
   feasibility: z.number().int().min(1).max(5),
   value_score: z.number(),
-});
+}).transform(story => ({
+  ...story,
+  // Recompute from source fields — ignores whatever value the model provides
+  // Formula: (BV×0.4) + (UI×0.35) + (F×0.25)
+  value_score: parseFloat(
+    (story.business_value * 0.4 + story.user_impact * 0.35 + story.feasibility * 0.25).toFixed(2),
+  ),
+}));
 
 const EpicSchema = z.object({
   id: z.string().describe('Epic ID e.g. EPIC-01'),
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
     }
   } catch {
     // Redis unavailable — fail open rather than blocking all traffic
-    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'chat', ip, ts: new Date().toISOString() }));
+    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'chat', ts: new Date().toISOString() }));
   }
 
   const body = await req.json();

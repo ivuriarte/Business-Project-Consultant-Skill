@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
   } catch {
     // Redis unavailable — fail open
-    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'export', ip, ts: new Date().toISOString() }));
+    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'export', ts: new Date().toISOString() }));
   }
 
   let body: ExportRequestBody;
