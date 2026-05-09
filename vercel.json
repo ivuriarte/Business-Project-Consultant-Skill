@@ -1,6 +1,1 @@
-{
-  "buildCommand": "cd agent && npm run build",
-  "outputDirectory": "agent/.next",
-  "installCommand": "cd agent && npm install",
-  "framework": "nextjs"
-}
+{}
