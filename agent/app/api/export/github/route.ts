@@ -1,10 +1,22 @@
-import { getSession, updateSession } from '@/lib/redis';
+import { getSession, updateSession, isValidSessionId } from '@/lib/redis';
 import { exportToGitHubIssues } from '@/lib/github';
+import { exportRatelimit, getIp } from '@/lib/ratelimit';
 import type { ExportRequestBody } from '@/lib/types';
 
-export async function POST(req: Request) {
-  let body: ExportRequestBody;
+export const runtime = 'edge';
 
+export async function POST(req: Request) {
+  // ── Rate limiting ───────────────────────────────────────────────────────
+  const ip = getIp(req);
+  const { success: rateLimitOk } = await exportRatelimit.limit(ip);
+  if (!rateLimitOk) {
+    return Response.json(
+      { error: 'Export rate limit reached. You can export up to 5 times per hour.' },
+      { status: 429 }
+    );
+  }
+
+  let body: ExportRequestBody;
   try {
     body = await req.json();
   } catch {
@@ -20,9 +32,13 @@ export async function POST(req: Request) {
     );
   }
 
-  // Validate repo format
-  if (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(`${owner}/${repo}`)) {
-    return Response.json({ error: 'Invalid repo format. Use: owner/repo' }, { status: 400 });
+  // ── Input validation ────────────────────────────────────────────────────
+  if (!isValidSessionId(sessionId)) {
+    return Response.json({ error: 'Invalid session ID' }, { status: 400 });
+  }
+
+  if (!/^[a-zA-Z0-9_.-]+$/.test(owner) || !/^[a-zA-Z0-9_.-]+$/.test(repo)) {
+    return Response.json({ error: 'Invalid owner or repo name' }, { status: 400 });
   }
 
   const session = await getSession(sessionId);

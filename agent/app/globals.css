@@ -11,84 +11,115 @@
     box-sizing: border-box;
   }
 
-  html,
-  body {
+  html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #0d1117;
-    color: #e6edf3;
-    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    background-color: #09090E;
+    color: #EDE8D8;
+    font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #6e7681;
+  /* Precision scrollbars */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #26263A; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3A3A54; }
+
+  /* Focus rings that respect the amber accent */
+  :focus-visible {
+    outline: 2px solid #E8A930;
+    outline-offset: 2px;
   }
 }
 
-@layer utilities {
-  .animate-bounce {
-    animation: bounce 1s infinite;
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
+/* ── Prose overrides for markdown in chat ─────────────────────────────────── */
+.prose {
+  --tw-prose-body: #D8D4C4;
+  --tw-prose-headings: #EDE8D8;
+  --tw-prose-bold: #EDE8D8;
+  --tw-prose-code: #E8A930;
+  --tw-prose-links: #E8A930;
+  --tw-prose-counters: #9490A8;
+  --tw-prose-bullets: #58566A;
+  --tw-prose-hr: #26263A;
+  --tw-prose-quotes: #9490A8;
+  --tw-prose-quote-borders: #E8A930;
 }
 
-/* Prose overrides for markdown in chat */
 .prose pre {
-  background-color: #161b22 !important;
-  border: 1px solid #30363d;
-  border-radius: 8px;
+  background-color: #111117 !important;
+  border: 1px solid #26263A;
+  border-radius: 6px;
   overflow-x: auto;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
 }
 
 .prose code:not(pre code) {
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 4px;
+  background-color: rgba(232, 169, 48, 0.1);
+  border: 1px solid rgba(232, 169, 48, 0.2);
+  border-radius: 3px;
   padding: 0.1em 0.35em;
   font-size: 0.85em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: #E8A930;
 }
 
 .prose blockquote {
-  border-left: 3px solid #58a6ff;
-  background-color: rgba(88, 166, 255, 0.05);
+  border-left: 2px solid #E8A930;
+  background-color: rgba(232, 169, 48, 0.04);
   padding: 0.5em 1em;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 4px 4px 0;
+  font-style: normal;
+  color: #9490A8;
 }
 
 .prose table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.8125rem;
 }
 
 .prose th,
 .prose td {
-  border: 1px solid #30363d;
-  padding: 0.4em 0.6em;
+  border: 1px solid #26263A;
+  padding: 0.4em 0.75em;
   text-align: left;
 }
 
 .prose th {
-  background-color: #161b22;
+  background-color: #18181F;
   font-weight: 600;
+  color: #EDE8D8;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .prose hr {
-  border-color: #30363d;
+  border-color: #26263A;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ── Utility classes ──────────────────────────────────────────────────────── */
+@layer utilities {
+  .font-mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+  /* Noise texture overlay for depth */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
 }

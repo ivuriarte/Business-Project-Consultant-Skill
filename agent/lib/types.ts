@@ -74,6 +74,7 @@ export interface AgentSession {
   epics: Epic[];
   messages: StoredMessage[];
   github_export?: GitHubExportRecord;
+  tokens_used?: number; // cumulative token usage — enforced cap prevents runaway billing
 }
 
 // ─── API Payloads ─────────────────────────────────────────────────────────────

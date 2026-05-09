@@ -1,12 +1,16 @@
 import { streamText, type CoreMessage } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { getOrCreateSession, updateSession, appendMessages } from '@/lib/redis';
+import { getOrCreateSession, updateSession, appendMessages, addTokenUsage, isValidSessionId } from '@/lib/redis';
 import { buildSystemPrompt } from '@/lib/instructions';
+import { chatRatelimit, getIp } from '@/lib/ratelimit';
 import type { Epic, ProjectMeta } from '@/lib/types';
 
 export const runtime = 'edge';
 export const maxDuration = 60;
+
+/** Per-session token budget (~$2 at GPT-4o pricing) */
+const SESSION_TOKEN_LIMIT = 100_000;
 
 // ─── Zod schemas for tool parameters ─────────────────────────────────────────
 
@@ -56,17 +60,37 @@ const ProjectMetaSchema = z.object({
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(req: Request) {
+  // ── Rate limiting ─────────────────────────────────────────────────────────
+  const ip = getIp(req);
+  const { success: rateLimitOk } = await chatRatelimit.limit(ip);
+  if (!rateLimitOk) {
+    return new Response('Too many requests. Please wait a moment.', { status: 429 });
+  }
+
   const body = await req.json();
   const { messages, sessionId } = body as {
     messages: CoreMessage[];
     sessionId: string;
   };
 
-  if (!sessionId) {
-    return new Response('Missing sessionId', { status: 400 });
+  // ── Input validation ──────────────────────────────────────────────────────
+  if (!sessionId || !isValidSessionId(sessionId)) {
+    return new Response('Invalid or missing sessionId', { status: 400 });
   }
 
   const session = await getOrCreateSession(sessionId);
+
+  // ── Per-session token cap ─────────────────────────────────────────────────
+  if ((session.tokens_used ?? 0) >= SESSION_TOKEN_LIMIT) {
+    return new Response(
+      JSON.stringify({
+        error: 'session_token_limit',
+        message: `This session has reached its token limit (${SESSION_TOKEN_LIMIT.toLocaleString()} tokens). Please start a new session to continue.`,
+      }),
+      { status: 402, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const systemPrompt = buildSystemPrompt(session);
 
   const result = streamText({
@@ -109,7 +133,16 @@ export async function POST(req: Request) {
         },
       },
     },
-    onFinish: async ({ text }) => {
+    onFinish: async ({ text, usage }) => {
+      // Track token usage for cost control
+      try {
+        if (usage?.totalTokens) {
+          await addTokenUsage(sessionId, usage.totalTokens);
+        }
+      } catch {
+        // Non-critical
+      }
+
       // Persist the conversation turn to Redis for session resumability
       try {
         const lastUserMsg = messages.filter(m => m.role === 'user').slice(-1)[0];
@@ -125,8 +158,8 @@ export async function POST(req: Request) {
         if (newMessages.length) {
           await appendMessages(sessionId, newMessages);
         }
-      } catch {
-        // Non-critical — don't fail the response if persistence fails
+      } catch (err) {
+        console.error('[chat/onFinish] Failed to persist messages:', err);
       }
     },
   });

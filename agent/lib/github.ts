@@ -1,6 +1,7 @@
 import type { Epic, UserStory } from './types';
 
 const GITHUB_API_BASE = 'https://api.github.com';
+const BATCH_SIZE = 5; // concurrent issue creation requests
 
 export async function exportToGitHubIssues(
   owner: string,
@@ -18,29 +19,45 @@ export async function exportToGitHubIssues(
   // Ensure labels exist (best-effort, won't fail if they exist already)
   await ensureLabels(owner, repo, headers);
 
+  // Flatten all stories with their parent epic
+  const items = epics.flatMap(epic =>
+    epic.stories.map(story => ({ epic, story }))
+  );
+
   const issue_urls: string[] = [];
 
-  for (const epic of epics) {
-    for (const story of epic.stories) {
-      const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/issues`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          title: `[${story.id}] ${story.title}`,
-          body: buildIssueBody(epic, story),
-          labels: buildLabels(story),
-        }),
-      });
+  // Process in parallel batches to avoid GitHub rate limits
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    const batch = items.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(({ epic, story }) =>
+        fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/issues`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            title: `[${story.id}] ${story.title}`,
+            body: buildIssueBody(epic, story),
+            labels: buildLabels(story),
+          }),
+        }).then(async res => {
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(
+              `GitHub API error ${res.status}: ${(err as { message?: string }).message ?? res.statusText}`
+            );
+          }
+          const issue = await res.json() as { html_url: string };
+          return issue.html_url;
+        })
+      )
+    );
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(
-          `GitHub API error ${res.status}: ${(err as { message?: string }).message ?? res.statusText}`
-        );
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        issue_urls.push(result.value);
+      } else {
+        throw new Error(`Failed to create issue: ${result.reason}`);
       }
-
-      const issue = await res.json() as { html_url: string };
-      issue_urls.push(issue.html_url);
     }
   }
 

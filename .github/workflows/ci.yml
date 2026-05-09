@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agent/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'agent/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  ci:
+    name: Type-check, lint & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: agent/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx next lint --max-warnings 0
+        continue-on-error: true   # warns but doesn't block on lint-only issues
+
+      - name: Build
+        run: npm run build
+        env:
+          # Stub values satisfy env validation at build time without exposing real secrets
+          OPENAI_API_KEY: sk-stub-000000000000000000000000000000000000000000000000
+          UPSTASH_REDIS_REST_URL: https://stub.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: stub-token
+          NEXT_PUBLIC_BASE_URL: https://example.com
