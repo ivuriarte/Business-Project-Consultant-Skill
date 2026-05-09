@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
 import { nanoid } from 'nanoid';
 import { getSession } from '@/lib/redis';
 import { ChatInterface } from '@/components/ChatInterface';
@@ -17,19 +16,15 @@ export default async function Page({ searchParams }: PageProps) {
   }
 
   const sessionId = params.s;
-  const session = await getSession(sessionId).catch(() => null);
 
-  return (
-    <Suspense fallback={<LoadingScreen />}>
-      <ChatInterface sessionId={sessionId} initialSession={session} />
-    </Suspense>
-  );
+  // Race against a 3 s timeout so a slow/unavailable Redis never blocks the page
+  const session = await Promise.race([
+    getSession(sessionId).catch(() => null),
+    new Promise<null>(resolve => setTimeout(() => resolve(null), 3000)),
+  ]);
+
+  // ChatInterface is a client component — no Suspense needed; render it directly
+  // so the server always includes its HTML rather than deferring to client JS load.
+  return <ChatInterface sessionId={sessionId} initialSession={session} />;
 }
 
-function LoadingScreen() {
-  return (
-    <div className="flex h-screen items-center justify-center bg-canvas">
-      <div className="text-text-muted text-sm font-mono animate-pulse">Loading session…</div>
-    </div>
-  );
-}
