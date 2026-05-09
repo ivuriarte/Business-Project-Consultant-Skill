@@ -1,9 +1,9 @@
-# Business and Project Consultant — Copilot Skill
+# Business and Project Consultant — Copilot Skill + AI Agent
 
-A GitHub Copilot skill that gives developers the full structured thinking of a Business Analyst, Product Owner, and Project Manager — from a raw idea to a developer-ready backlog, phased plan, and actionable prompts.
+A GitHub Copilot skill and standalone AI web agent that gives developers the full structured thinking of a Business Analyst, Product Owner, and Project Manager — from a raw idea to a developer-ready backlog, phased plan, and actionable prompts.
 
 **Author:** Ian Vince  
-**Version:** 1.3.0  
+**Version:** 2.0.0  
 **License:** MIT
 
 ---
@@ -16,24 +16,46 @@ Most developers receive either a vague vision ("I want an app like Airbnb but fo
 - **PO discipline** → What goes in the backlog? What is the priority?
 - **PM structure** → When does it get built? In what phases?
 
-**Output:** A prioritized backlog (Epic → User Story → Acceptance Criteria), a requirements document, a phased project plan, and ready-to-paste developer prompts — all generated through guided interactive wizards.
+**Output:** A prioritized backlog (Epic → User Story → Acceptance Criteria), auto-scored by value, phased by priority, with a Greatest Value Prompt and one-click GitHub Issues export.
 
 ---
 
-## Two Ways to Use This Skill
+## Three Ways to Use This
 
-### Option A — Copilot Chat (no terminal needed)
+### Option A — AI Agent (recommended, `agent/`)
 
-If you have this installed as a Copilot skill, open GitHub Copilot Chat and just describe your idea:
+A full web application anyone can use — no Copilot, no Python, no terminal required.
+
+```bash
+cd agent
+cp .env.local.example .env.local   # fill in OpenAI + Upstash keys
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). You'll get a unique session URL to share with your team.
+
+**What the agent does that the other options don't:**
+- Enforces the Business Intent gate — refuses to generate epics until all 3 intent questions are answered
+- Auto-scores every story using the Value Scoring Matrix (Business Value × User Impact × Feasibility)
+- Persists sessions in Upstash Redis — shareable URL, resumable after closing the browser
+- Exports directly to GitHub Issues — labeled, one per story, with AC and metadata
+- Shows a live backlog sidebar with stage progress as you work
+
+See [`agent/README.md`](agent/README.md) for full setup instructions.
+
+### Option B — Copilot Chat (no terminal needed)
+
+If you have this installed as a Copilot skill, open GitHub Copilot Chat and describe your idea:
 
 - *"Help me define my app idea"*
 - *"Turn this into a backlog"*
 - *"Create user stories for my project"*
 - *"Plan the development phases"*
 
-Copilot guides you through the same structured BA/PM/PO thinking — entirely in conversation. No Python, no terminal, no files to manage.
+Copilot guides you through the same structured BA/PM/PO thinking — entirely in conversation. No files to manage.
 
-### Option B — Interactive Scripts (permanent output files)
+### Option C — Interactive Scripts (permanent output files)
 
 Run the three Python wizards directly. Each produces `.md` and `.json` output files you can share with your team, import into GitHub Issues, paste into Jira, or hand to a developer.
 
@@ -43,16 +65,23 @@ python3 scripts/idea_to_backlog.py          # Build the backlog
 python3 scripts/project_planner.py          # Plan the phases
 ```
 
-**The scripts generate permanent files. Copilot chat does not.** Use Option B when you need deliverables — a requirements doc, a backlog file, or a Gantt chart.
-
-> **Not sure which to use?** Start with Option A (chat) to explore your idea. Switch to Option B when you're ready to produce shareable documents.
+> **Not sure which to use?** Use Option A (agent) if you want a complete guided experience with team sharing and GitHub export. Use Option B (Copilot) for quick in-editor sessions. Use Option C when you need permanent deliverable files.
 
 ---
 
 ## Requirements
 
+### For the AI Agent (Option A)
+- **Node.js 18+**
+- **OpenAI API key** (GPT-4o access)
+- **Upstash Redis** account (free tier works)
+- **GitHub Personal Access Token** (for export, `repo` scope)
+
+### For the Copilot Skill (Option B)
 - **GitHub Copilot** with agent/skill support enabled
-- **Python 3.8+** (for the interactive scripts)
+
+### For the CLI Scripts (Option C)
+- **Python 3.8+**
 - No external Python libraries required — standard library only
 
 ---
@@ -101,11 +130,31 @@ Open VS Code with GitHub Copilot. In the Copilot chat panel, the skill will be a
 
 ```
 business-project-consultant/
-├── SKILL.md                          ← Skill definition (Copilot reads this)
+├── SKILL.md                          ← Copilot skill definition
 ├── README.md                         ← This file
 ├── CHANGELOG.md                      ← Version history
 ├── CONTRIBUTING.md                   ← How to contribute improvements
 ├── LICENSE                           ← MIT License
+├── agent/                            ← Standalone AI web agent (v2.0)
+│   ├── app/                          ← Next.js App Router
+│   │   ├── api/chat/                 ← Streaming chat endpoint (GPT-4o)
+│   │   ├── api/session/[id]/         ← Session data endpoint
+│   │   ├── api/export/github/        ← GitHub Issues export endpoint
+│   │   ├── page.tsx                  ← Main page (session routing)
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── ChatInterface.tsx         ← Main chat UI
+│   │   ├── BacklogPanel.tsx          ← Live backlog sidebar
+│   │   ├── MessageBubble.tsx         ← Markdown message renderer
+│   │   └── ExportButton.tsx          ← GitHub export modal
+│   ├── lib/
+│   │   ├── types.ts                  ← Shared TypeScript types
+│   │   ├── instructions.ts           ← System prompt + stage definitions
+│   │   ├── redis.ts                  ← Upstash session layer
+│   │   └── github.ts                 ← GitHub API client
+│   ├── .env.local.example            ← Environment variable template
+│   └── README.md                     ← Agent setup guide
 ├── scripts/
 │   ├── idea_to_backlog.py            ← Wizard: idea → backlog + developer prompts
 │   ├── requirements_elicitor.py      ← Wizard: captures all requirement types

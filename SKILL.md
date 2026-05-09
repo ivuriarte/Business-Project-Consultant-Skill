@@ -1,14 +1,15 @@
 ---
 name: business-project-consultant
-description: 'Full-stack Business, Product, and Project Consultant. Merges BA, PM, and PO capabilities to take a raw idea (CEO-level) and produce structured requirements, a prioritized backlog (Epic -> User Story -> Acceptance Criteria), development phases, key documents, and high-value copy-paste prompts ready for developers. WHEN: help me define my app idea, turn this into a backlog, write requirements, create user stories, plan development phases, BRD, functional requirements, acceptance criteria, what should I build first, scope my project, create a roadmap, I have an idea, break this down for developers, give me a prompt to build, project phases, MVP scope.'
+description: 'Full-stack Business, Product, and Project Consultant. Merges BA, PM, and PO capabilities to take a raw idea (CEO-level) and produce structured requirements, a prioritized backlog (Epic -> User Story -> Acceptance Criteria), development phases, key documents, and high-value copy-paste prompts ready for developers. Also available as a standalone AI Agent web app (agent/) with GitHub Issues export and shareable session links. WHEN: help me define my app idea, turn this into a backlog, write requirements, create user stories, plan development phases, BRD, functional requirements, acceptance criteria, what should I build first, scope my project, create a roadmap, I have an idea, break this down for developers, give me a prompt to build, project phases, MVP scope.'
 license: MIT
 metadata:
-  version: 1.3.0
+  version: 2.0.0
   author: Ian Vince
   category: consulting
   domain: business-analysis, product-management, project-management
-  updated: 2026-04-28
+  updated: 2026-05-10
   python-tools: idea_to_backlog.py, requirements_elicitor.py, project_planner.py
+  agent: agent/ (Next.js + GPT-4o + Upstash Redis)
   frameworks: MoSCoW, INVEST, SMART, Kano, Jobs-to-be-Done, Value-Effort Matrix
 ---
 

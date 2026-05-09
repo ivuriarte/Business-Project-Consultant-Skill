@@ -13,6 +13,12 @@
 # Local working notes — never commit
 TODO.md
 
+# Agent — secrets and build artifacts (never commit)
+agent/.env.local
+agent/.next/
+agent/node_modules/
+agent/*.tsbuildinfo
+
 # Python
 __pycache__/
 *.py[cod]

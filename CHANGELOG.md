@@ -7,6 +7,26 @@ Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 
 ---
 
+## [2.0.0] — 2026-05-10
+
+### Added — Idea → Agent (full AI agent, `agent/`)
+- **Next.js 16 AI agent** (`agent/`): A fully deployable web application that transforms the Copilot skill into a production-grade AI agent usable by anyone — no Copilot, no terminal, no Python required.
+- **Hard-gated Business Intent stage**: The agent enforces all three Business Intent Questions (Cost of Inaction, Stakeholder Value, Key Assumption) at the system-prompt level. It refuses to generate any Epic until all three are answered with substantive responses.
+- **OpenAI GPT-4o with Vercel AI SDK v4**: Streaming multi-turn conversation via the Assistants-compatible `useChat` hook. Tool calling (`persist_backlog`) integrates directly with the session layer.
+- **Upstash Redis session persistence** (`lib/redis.ts`): Every session has a unique shareable URL (`/?s=<id>`). Sessions persist for 30 days. Conversation history is stored and restored on reload, making sessions fully resumable and shareable with teammates.
+- **Auto-scoring value matrix** (`lib/instructions.ts`): The agent automatically computes Business Value × User Impact × Feasibility scores from gathered context — users are never asked to score manually.
+- **GitHub Issues export** (`app/api/export/github/route.ts`, `lib/github.ts`): One-click export creates a labeled GitHub Issue per User Story with full Acceptance Criteria, value score metadata, and phase/priority labels. Labels are created automatically in the target repo.
+- **Backlog sidebar** (`components/BacklogPanel.tsx`): Live-updating panel shows stage progress, project name, all Epics with expandable story lists, and MVP story count. Updates automatically after each AI turn.
+- **Export modal** (`components/ExportButton.tsx`): In-app GitHub export UI. Users enter owner, repo, and a Personal Access Token (never stored server-side). Displays created issue URLs on success.
+- **Session share button**: Copies the session URL to clipboard so product managers or developers can open the same session in their own browser.
+- **Greatest Value Prompt**: After full backlog generation, the agent outputs a production-ready, copy-paste developer prompt for the highest-scoring story in a structured format (Context, Story, Functional Requirements, AC, NFRs, Out of Scope, Definition of Done).
+
+### Changed
+- `SKILL.md` updated to reference the `agent/` web application as the primary interface. CLI scripts remain as Option B for permanent file outputs.
+- `README.md` updated with agent setup instructions and revised folder structure.
+
+---
+
 ## [1.3.0] — 2026-04-28
 
 ### Added
