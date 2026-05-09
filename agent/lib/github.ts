@@ -19,6 +19,8 @@ export async function exportToGitHubIssues(
   // Ensure labels exist (best-effort, won't fail if they exist already)
   await ensureLabels(owner, repo, headers);
 
+  console.log(JSON.stringify({ event: 'export_start', owner, repo, epic_count: epics.length, ts: new Date().toISOString() }));
+
   // Flatten all stories with their parent epic
   const items = epics.flatMap(epic =>
     epic.stories.map(story => ({ epic, story }))
@@ -52,15 +54,24 @@ export async function exportToGitHubIssues(
       )
     );
 
+    const failures: string[] = [];
     for (const result of results) {
       if (result.status === 'fulfilled') {
         issue_urls.push(result.value);
       } else {
-        throw new Error(`Failed to create issue: ${result.reason}`);
+        failures.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
+    }
+    // Only abort if the entire batch failed — partial success is acceptable
+    if (failures.length > 0 && failures.length === batch.length) {
+      throw new Error(`GitHub export batch failed: ${failures[0]}`);
+    }
+    if (failures.length > 0) {
+      console.warn(JSON.stringify({ event: 'export_partial_failure', count: failures.length, reason: failures[0], ts: new Date().toISOString() }));
     }
   }
 
+  console.log(JSON.stringify({ event: 'export_complete', owner, repo, issues_created: issue_urls.length, ts: new Date().toISOString() }));
   return { issues_created: issue_urls.length, issue_urls };
 }
 

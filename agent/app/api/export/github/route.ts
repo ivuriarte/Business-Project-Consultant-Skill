@@ -8,12 +8,17 @@ export const runtime = 'edge';
 export async function POST(req: Request) {
   // ── Rate limiting ───────────────────────────────────────────────────────
   const ip = getIp(req);
-  const { success: rateLimitOk } = await exportRatelimit.limit(ip);
-  if (!rateLimitOk) {
-    return Response.json(
-      { error: 'Export rate limit reached. You can export up to 5 times per hour.' },
-      { status: 429 }
-    );
+  try {
+    const { success: rateLimitOk } = await exportRatelimit.limit(ip);
+    if (!rateLimitOk) {
+      return Response.json(
+        { error: 'Export rate limit reached. You can export up to 5 times per hour.' },
+        { status: 429 }
+      );
+    }
+  } catch {
+    // Redis unavailable — fail open
+    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'export', ip, ts: new Date().toISOString() }));
   }
 
   let body: ExportRequestBody;
@@ -53,6 +58,8 @@ export async function POST(req: Request) {
       { status: 422 }
     );
   }
+
+  console.log(JSON.stringify({ event: 'export_request', sessionId, repo: `${owner}/${repo}`, epic_count: session.epics.length, ts: new Date().toISOString() }));
 
   try {
     const result = await exportToGitHubIssues(owner, repo, session.epics, token);

@@ -54,6 +54,9 @@ export interface ProjectMeta {
 
 // ─── Session ─────────────────────────────────────────────────────────────────
 
+/** Bump this when the system prompt changes to prevent mid-session stage drift */
+export const CURRENT_PROMPT_VERSION = 'v1' as const;
+
 export interface StoredMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -70,6 +73,7 @@ export interface AgentSession {
   created_at: string;
   updated_at: string;
   stage: Stage;
+  prompt_version: string;  // pinned at session creation — prevents mid-session prompt drift
   project?: ProjectMeta;
   epics: Epic[];
   messages: StoredMessage[];

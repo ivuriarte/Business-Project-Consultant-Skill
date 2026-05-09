@@ -62,9 +62,14 @@ const ProjectMetaSchema = z.object({
 export async function POST(req: Request) {
   // ── Rate limiting ─────────────────────────────────────────────────────────
   const ip = getIp(req);
-  const { success: rateLimitOk } = await chatRatelimit.limit(ip);
-  if (!rateLimitOk) {
-    return new Response('Too many requests. Please wait a moment.', { status: 429 });
+  try {
+    const { success: rateLimitOk } = await chatRatelimit.limit(ip);
+    if (!rateLimitOk) {
+      return new Response('Too many requests. Please wait a moment.', { status: 429 });
+    }
+  } catch {
+    // Redis unavailable — fail open rather than blocking all traffic
+    console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'chat', ip, ts: new Date().toISOString() }));
   }
 
   const body = await req.json();
@@ -91,6 +96,7 @@ export async function POST(req: Request) {
     );
   }
 
+  console.log(JSON.stringify({ event: 'chat_request', sessionId, stage: session.stage, tokens_used: session.tokens_used ?? 0, ts: new Date().toISOString() }));
   const systemPrompt = buildSystemPrompt(session);
 
   const result = streamText({
@@ -164,5 +170,15 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    getErrorMessage: (error) => {
+      console.error(JSON.stringify({
+        event: 'stream_error',
+        sessionId,
+        error: error instanceof Error ? error.message : String(error),
+        ts: new Date().toISOString(),
+      }));
+      return 'Stream interrupted — please try again.';
+    },
+  });
 }

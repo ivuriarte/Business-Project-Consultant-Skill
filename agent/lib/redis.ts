@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import type { AgentSession, StoredMessage } from './types';
+import { CURRENT_PROMPT_VERSION, type AgentSession, type StoredMessage } from './types';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -29,6 +29,7 @@ export async function getOrCreateSession(id: string): Promise<AgentSession> {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     stage: 'welcome',
+    prompt_version: CURRENT_PROMPT_VERSION,
     epics: [],
     messages: [],
     tokens_used: 0,

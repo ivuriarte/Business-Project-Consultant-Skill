@@ -1,0 +1,22 @@
+name: Smoke Test
+
+on:
+  deployment_status:
+
+jobs:
+  smoke-test:
+    # Runs when Vercel marks a production deployment as "success"
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check
+        run: |
+          URL="${{ github.event.deployment_status.target_url }}/api/health"
+          echo "Checking $URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$URL")
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Smoke test FAILED — deployment is live but /api/health returned $STATUS"
+            exit 1
+          fi
+          echo "Smoke test passed"
