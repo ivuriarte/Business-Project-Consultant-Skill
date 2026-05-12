@@ -1,7 +1,7 @@
 import { streamText, type CoreMessage } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { getOrCreateSession, updateSession, appendMessages, addTokenUsage, isValidSessionId } from '@/lib/redis';
+import { getOrCreateSession, updateSession, appendMessages, appendEpics, addTokenUsage, isValidSessionId } from '@/lib/redis';
 import { buildSystemPrompt } from '@/lib/instructions';
 import { chatRatelimit, getIp } from '@/lib/ratelimit';
 import type { Epic, ProjectMeta } from '@/lib/types';
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     system: systemPrompt,
     messages,
     maxTokens: 8000,
-    maxSteps: 5,
+    maxSteps: 10, // allows up to ~8 epics each with a save_checkpoint call, plus final persist_backlog
     tools: {
       // ── Tool 1: Persist the generated backlog to Redis ─────────────────────
       persist_backlog: {
@@ -145,6 +145,19 @@ export async function POST(req: Request) {
           };
         },
       },
+
+      // ── Tool 2: Checkpoint partial progress during streaming ──────────────
+      save_checkpoint: {
+        description:
+          'Persist partial backlog progress to Redis. Call this immediately after each Epic and all its User Stories are fully written in the response, passing ALL epics generated so far. Continue to the next Epic without waiting for user input. Enables recovery if the stream is interrupted before persist_backlog fires.',
+        parameters: z.object({
+          epics: z.array(EpicSchema).min(1),
+        }),
+        execute: async ({ epics }: { epics: z.infer<typeof EpicSchema>[] }) => {
+          await appendEpics(sessionId, epics as Epic[]);
+          return { success: true, checkpoint_epics: epics.length };
+        },
+      },
     },
     onFinish: async ({ text, usage }) => {
       // Track token usage for cost control
@@ -152,8 +165,8 @@ export async function POST(req: Request) {
         if (usage?.totalTokens) {
           await addTokenUsage(sessionId, usage.totalTokens);
         }
-      } catch {
-        // Non-critical
+      } catch (err) {
+        console.warn(JSON.stringify({ event: 'token_tracking_failed', sessionId, error: err instanceof Error ? err.message : String(err), ts: new Date().toISOString() }));
       }
 
       // Persist the conversation turn to Redis for session resumability

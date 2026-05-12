@@ -73,7 +73,7 @@ export interface AgentSession {
   created_at: string;
   updated_at: string;
   stage: Stage;
-  prompt_version: string;  // pinned at session creation — prevents mid-session prompt drift
+  prompt_version: string;  // pinned at session creation — forensic-only; buildSystemPrompt does NOT branch on this value
   project?: ProjectMeta;
   epics: Epic[];
   messages: StoredMessage[];

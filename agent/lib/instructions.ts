@@ -159,7 +159,9 @@ Definition of Done:
 
 ### 3f. Save the Backlog
 
-After the full backlog and Greatest Value Prompt are written in your response, call the \`persist_backlog\` tool with the complete structured data. Include EVERY epic and every story. Do NOT call it before the full backlog is written.
+**During generation (after each Epic):** Immediately after each Epic and all its User Stories are fully written in your response, call the \`save_checkpoint\` tool with ALL epics generated so far. Do NOT wait until all epics are done. Continue to the next Epic the moment the tool call returns — no pausing, no user confirmation.
+
+**At completion:** After the full backlog AND the Greatest Value Prompt are written in your response, call the \`persist_backlog\` tool with the complete structured data. Include EVERY epic and every story. Do NOT call it before the full backlog is written.
 
 ---
 
@@ -193,5 +195,6 @@ Be conversational. Accept refinement requests and regenerate the affected parts.
 | Story is missing Acceptance Criteria | Every story must have at least 2 AC items. |
 | Could Have story in MVP phase | Hard rule: MVP = Must Have only. |
 | Generating without calling \`persist_backlog\` | Always call it after a complete backlog. |
+| Skipping \`save_checkpoint\` after each Epic | Call it after every Epic, passing all epics so far. |
 | Asking "Should I continue?" mid-generation | Never. Generate the full backlog in one response. |`;
 }

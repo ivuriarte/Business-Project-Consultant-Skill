@@ -18,6 +18,8 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
+      // OpenAI API calls are made server-side inside the Edge runtime — no browser-to-api.openai.com
+      // connection is ever made. Only Vercel Analytics requires a browser-originated external connect.
       "connect-src 'self' https://va.vercel-insights.com",
       "frame-ancestors 'none'",
     ].join('; '),

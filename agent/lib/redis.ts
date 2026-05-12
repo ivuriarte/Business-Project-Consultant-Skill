@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { CURRENT_PROMPT_VERSION, type AgentSession, type StoredMessage } from './types';
+import { CURRENT_PROMPT_VERSION, type AgentSession, type Epic, type StoredMessage } from './types';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -60,12 +60,24 @@ export async function appendMessages(
   id: string,
   newMessages: StoredMessage[]
 ): Promise<void> {
-  const session = await getSession(id);
+  const session = await getSession(id); // 1 read
   if (!session) return;
 
-  // Keep last 100 messages to prevent unbounded growth
+  // Keep last 100 messages to prevent unbounded growth.
+  // Direct SET avoids the extra getSession() call inside updateSession (3 round-trips → 2).
   const combined = [...session.messages, ...newMessages].slice(-100);
-  await updateSession(id, { messages: combined });
+  const updated: AgentSession = { ...session, messages: combined, updated_at: new Date().toISOString() };
+  await redis.set(`${SESSION_PREFIX}${id}`, updated, { ex: SESSION_TTL_SECONDS });
+}
+
+/** Save a partial epics list during streaming. Overwrites the epics array without advancing stage.
+ *  Called by the save_checkpoint tool after each Epic is written, so Redis holds partial progress
+ *  if the stream is interrupted before persist_backlog fires. */
+export async function appendEpics(id: string, epics: Epic[]): Promise<void> {
+  const session = await getSession(id);
+  if (!session) return;
+  const updated: AgentSession = { ...session, epics, updated_at: new Date().toISOString() };
+  await redis.set(`${SESSION_PREFIX}${id}`, updated, { ex: SESSION_TTL_SECONDS });
 }
 
 export async function addTokenUsage(id: string, tokens: number): Promise<void> {
