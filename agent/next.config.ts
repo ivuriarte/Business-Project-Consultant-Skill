@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next';
 
+// Content-Security-Policy is set dynamically per request in middleware.ts
+// (requires a per-request nonce so Next.js inline hydration scripts are allowed).
+// These static headers apply to every response including API routes.
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -9,20 +12,6 @@ const securityHeaders = [
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
-  },
-  {
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      "script-src 'self'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https:",
-      "font-src 'self'",
-      // OpenAI API calls are made server-side inside the Edge runtime — no browser-to-api.openai.com
-      // connection is ever made. Only Vercel Analytics requires a browser-originated external connect.
-      "connect-src 'self' https://va.vercel-insights.com",
-      "frame-ancestors 'none'",
-    ].join('; '),
   },
 ];
 
