@@ -320,7 +320,7 @@ function WelcomeScreen({ onSelect, onOpenTemplates }: { onSelect: (text: string)
       <div className="mb-6">
         <div className="text-4xl mb-3">👋</div>
         <h1 className="text-2xl font-bold text-text-primary leading-tight">
-          Hi, I'm <span className="text-agent-violet">Frank</span>
+          Hi, I&apos;m <span className="text-agent-violet">Frank</span>
         </h1>
         <p className="text-text-muted text-sm mt-2 max-w-xs leading-relaxed">
           From idea to backlog in minutes. No BA or PM experience required.

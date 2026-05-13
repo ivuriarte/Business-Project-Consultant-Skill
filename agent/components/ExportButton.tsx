@@ -20,22 +20,6 @@ export function ExportButton({ sessionId, projectName }: ExportButtonProps) {
   const [issueCount, setIssueCount] = useState(0);
   const firstInputRef             = useRef<HTMLInputElement>(null);
 
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  // Focus first field when modal opens
-  useEffect(() => {
-    if (open) setTimeout(() => firstInputRef.current?.focus(), 50);
-  }, [open]);
-
   const reset = useCallback(() => {
     setStatus('idle');
     setMessage('');
@@ -46,6 +30,21 @@ export function ExportButton({ sessionId, projectName }: ExportButtonProps) {
     setOpen(false);
     reset();
   }, [reset]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, handleClose]);
+
+  // Focus first field when modal opens
+  useEffect(() => {
+    if (open) setTimeout(() => firstInputRef.current?.focus(), 50);
+  }, [open]);
 
   const handleOpen = () => {
     reset();
