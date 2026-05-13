@@ -55,7 +55,7 @@ export interface ProjectMeta {
 // ─── Session ─────────────────────────────────────────────────────────────────
 
 /** Bump this when the system prompt changes to prevent mid-session stage drift */
-export const CURRENT_PROMPT_VERSION = 'v1' as const;
+export const CURRENT_PROMPT_VERSION = 'v2' as const;
 
 export interface StoredMessage {
   role: 'user' | 'assistant';

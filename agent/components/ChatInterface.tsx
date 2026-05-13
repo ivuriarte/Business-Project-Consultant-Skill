@@ -163,15 +163,18 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
 
           <div className="flex-1" />
 
-          {/* Session pill */}
-          <button
-            onClick={copySessionLink}
-            title="Copy shareable session link"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2 hover:bg-border text-text-muted hover:text-text-primary text-[11px] font-mono transition-colors border border-border"
-          >
-            <span className="truncate max-w-[80px]">{sessionId}</span>
-            <span className="text-accent text-[10px]">{copied ? '✓' : '⎘'}</span>
-          </button>
+          {/* Session pill + bookmark hint */}
+          <div className="hidden sm:flex flex-col items-end gap-0.5">
+            <button
+              onClick={copySessionLink}
+              title="Copy shareable session link"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2 hover:bg-border text-text-muted hover:text-text-primary text-[11px] font-mono transition-colors border border-border"
+            >
+              <span className="truncate max-w-[80px]">{sessionId}</span>
+              <span className="text-accent text-[10px]">{copied ? '✓' : '⎈'}</span>
+            </button>
+            <span className="text-[9px] font-mono text-text-muted/60">bookmark to return</span>
+          </div>
 
           {/* Start fresh */}
           {backlog.stage !== 'welcome' && (
@@ -197,7 +200,12 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
           aria-label="Conversation"
           className="flex-1 overflow-y-auto py-6"
         >
-          {messages.length === 0 && !isLoading && <WelcomeScreen onSelect={handleStarterSelect} />}
+          {messages.length === 0 && !isLoading && (
+            <WelcomeScreen
+              onSelect={handleStarterSelect}
+              onOpenTemplates={() => setShowTemplates(true)}
+            />
+          )}
 
           <div className="max-w-3xl mx-auto space-y-0.5">
             {messages.map(msg => (
@@ -305,7 +313,7 @@ const FEATURES = [
 
 // ─── Welcome screen ───────────────────────────────────────────────────────────
 
-function WelcomeScreen({ onSelect }: { onSelect: (text: string) => void }) {
+function WelcomeScreen({ onSelect, onOpenTemplates }: { onSelect: (text: string) => void; onOpenTemplates?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-6 animate-fade-in select-none">
       {/* Greeting */}
@@ -351,6 +359,15 @@ function WelcomeScreen({ onSelect }: { onSelect: (text: string) => void }) {
             </button>
           ))}
         </div>
+        {onOpenTemplates && (
+          <button
+            onClick={onOpenTemplates}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] text-text-muted hover:text-agent-violet transition-colors py-1.5 font-mono"
+          >
+            <span>Browse templates</span>
+            <span>→</span>
+          </button>
+        )}
       </div>
 
       {/* Feature pills */}

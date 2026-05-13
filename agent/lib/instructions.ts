@@ -1,7 +1,5 @@
 import type { AgentSession } from './types';
 
-export const CURRENT_PROMPT_VERSION = 'v2';
-
 export function buildSystemPrompt(session: AgentSession): string {
   const epicCount = session.epics.length;
   const storyCount = session.epics.reduce((n, e) => n + e.stories.length, 0);
