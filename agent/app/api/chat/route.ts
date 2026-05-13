@@ -1,9 +1,9 @@
 import { streamText, type CoreMessage } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { getOrCreateSession, updateSession, appendMessages, appendEpics, addTokenUsage, isValidSessionId } from '@/lib/redis';
+import { getSession, getOrCreateSession, updateSession, appendMessages, appendEpics, addTokenUsage, isValidSessionId } from '@/lib/redis';
 import { buildSystemPrompt } from '@/lib/instructions';
-import { chatRatelimit, getIp } from '@/lib/ratelimit';
+import { chatRatelimit, newSessionRatelimit, getIp } from '@/lib/ratelimit';
 import type { Epic, ProjectMeta } from '@/lib/types';
 
 export const runtime = 'edge';
@@ -90,7 +90,21 @@ export async function POST(req: Request) {
     return new Response('Invalid or missing sessionId', { status: 400 });
   }
 
-  const session = await getOrCreateSession(sessionId);
+  // ── New-session rate limit (prevents session explosion / cost abuse) ───────
+  // Check before creating to avoid leaving orphaned sessions on rejection.
+  const preCheck = await getSession(sessionId);
+  if (!preCheck) {
+    try {
+      const { success: newSessionOk } = await newSessionRatelimit.limit(ip);
+      if (!newSessionOk) {
+        return new Response('Session creation limit reached. You can start up to 5 new sessions per hour.', { status: 429 });
+      }
+    } catch {
+      console.warn(JSON.stringify({ event: 'ratelimit_unavailable', route: 'chat_new_session', ts: new Date().toISOString() }));
+    }
+  }
+
+  const session = preCheck ?? await getOrCreateSession(sessionId);
 
   // ── Per-session token cap ─────────────────────────────────────────────────
   if ((session.tokens_used ?? 0) >= SESSION_TOKEN_LIMIT) {

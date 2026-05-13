@@ -18,9 +18,9 @@ const sans = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Frank — Business & Project Consultant',
+  title: 'Frank — From Idea to Backlog in Minutes',
   description:
-    'Transform your raw idea into a developer-ready backlog with Epics, User Stories, and Acceptance Criteria.',
+    'From idea to backlog in minutes. Structured epics, prioritized stories, and developer-ready output — with GitHub Issues export included.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

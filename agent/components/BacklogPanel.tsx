@@ -76,7 +76,7 @@ export function BacklogPanel({
             </div>
             <div>
               <div className="font-semibold text-sm text-text-primary leading-tight">Frank</div>
-              <div className="text-[10px] text-text-muted leading-tight">Business &amp; Project Consultant</div>
+              <div className="text-[10px] text-text-muted leading-tight">From idea to backlog in minutes.</div>
             </div>
           </div>
           {/* AI badge + close */}

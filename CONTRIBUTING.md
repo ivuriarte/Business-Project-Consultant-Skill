@@ -1,6 +1,6 @@
-# Contributing to Business and Project Consultant
+# Contributing to Frank — AI Product Strategist
 
-Thank you for using this skill and for considering an improvement. Contributions are welcome — whether it's fixing a bug in a script, adding a new analysis framework, improving documentation, or suggesting a new wizard.
+Thank you for using Frank and for considering an improvement. Contributions are welcome across all three layers: the AI agent, the Copilot skill, and the CLI scripts.
 
 ---
 
@@ -8,25 +8,40 @@ Thank you for using this skill and for considering an improvement. Contributions
 
 | Type | Examples |
 |---|---|
-| **Bug fix** | A script crashes on certain input, output formatting is broken |
-| **Improvement** | Better prompts in a wizard, clearer AC examples, smarter value scoring |
-| **New framework** | Adding a new requirements or prioritization framework to `references/` |
-| **New script** | A new interactive wizard (e.g. stakeholder mapper, risk register builder) |
-| **Documentation** | Clearer README, better examples, translation |
+| **Agent bug fix** | Route error, UI regression, Redis edge case, tool calling failure |
+| **Agent feature** | New export destination, new stage, new AI capability |
+| **Prompt improvement** | Better Business Intent questions, clearer backlog instructions, tighter value scoring |
+| **Script bug fix** | A CLI script crashes on certain input, output formatting is broken |
+| **New framework** | Adding a new analysis framework to `references/` |
+| **Documentation** | Clearer README, better examples, updated setup guide |
 
 ---
 
 ## How to Submit a Change
 
-1. **Fork or copy** this skill folder to your own machine
+1. **Fork or copy** this repository to your own machine
 2. **Make your change** in the relevant file
-3. **Test it** — if you changed a script, run it end-to-end and verify the output
+3. **Test it** — if you changed an agent route, run `npm test`; if you changed a script, run it end-to-end
 4. **Update `CHANGELOG.md`** — add a new entry under the correct version bump
-5. **Share it back** — send the updated folder (or a diff) to the skill author
+5. **Open a PR** or send a diff to the skill author
 
 ---
 
-## Script Contribution Guidelines
+## Agent Contribution Guidelines (`agent/`)
+
+When modifying the Next.js agent:
+
+- **TypeScript strict mode.** No `any` types unless unavoidable. Run `npx tsc --noEmit` before submitting.
+- **Tests are required.** If you add a route or modify a route's behavior, add or update the corresponding test in `__tests__/routes/`. Run `npm test` and confirm all 45 tests pass.
+- **Edge runtime only.** All API routes must include `export const runtime = 'edge'`. Do not use Node.js-only APIs.
+- **Zod validation at every boundary.** All inputs to route handlers must be validated with Zod before any processing.
+- **No PII in logs.** Do not log IP addresses, GitHub tokens, user content, or session data. Use structured JSON log format: `{ event, sessionId, ... }`.
+- **Rate limiting is fail-open.** Do not change `chatRatelimit`/`exportRatelimit` to fail-closed — availability takes priority.
+- **Session key format is `session:<id>`.** Do not change the key format without a migration plan.
+
+---
+
+## Script Contribution Guidelines (`scripts/`)
 
 When adding or modifying a Python script:
 

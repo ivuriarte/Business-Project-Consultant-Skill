@@ -1,26 +1,33 @@
-# Business and Project Consultant — Copilot Skill + AI Agent
+# Frank — From Idea to Backlog in Minutes
 
-A GitHub Copilot skill and standalone AI web agent that gives developers the full structured thinking of a Business Analyst, Product Owner, and Project Manager — from a raw idea to a developer-ready backlog, phased plan, and actionable prompts.
+> **The AI that structures your thinking before you build.**  
+> Structured epics. Prioritized stories. Developer-ready output. GitHub export included.
 
 **Author:** Ian Vince  
-**Version:** 2.0.0  
+**Version:** 3.0.0  
 **License:** MIT
 
 ---
 
-## What It Does
+## What Frank Does
 
-Most developers receive either a vague vision ("I want an app like Airbnb but for tools") or a half-formed spec that skips the *why* and jumps to *what*. This skill bridges that gap by combining:
+Most founders and developers jump straight to wireframes or code before they've answered the three questions that actually determine whether a product succeeds:
 
-- **BA thinking** → What is the problem? What are the requirements?
-- **PO discipline** → What goes in the backlog? What is the priority?
-- **PM structure** → When does it get built? In what phases?
+- *Why does this need to exist?* (Cost of inaction)
+- *Who specifically benefits?* (User + stakeholder value)
+- *What assumption would invalidate all of this?* (Key risk)
 
-**Output:** A prioritized backlog (Epic → User Story → Acceptance Criteria), auto-scored by value, phased by priority, with a Greatest Value Prompt and one-click GitHub Issues export.
+Frank refuses to skip these. It gates backlog generation behind a structured Quick Brief, then produces a complete, auto-scored backlog (Epics → User Stories → Acceptance Criteria) ready for your dev team — or for GitHub Issues export.
+
+**What you get from a single session:**
+- Prioritized backlog (Epics → Stories → AC) with MoSCoW and value scores
+- Greatest Value Prompt — a production-ready copy-paste developer prompt for your highest-impact story
+- GitHub Issues export — one issue per User Story, labeled and structured
+- Shareable session URL — share your backlog with any teammate
 
 ---
 
-## Three Ways to Use This
+## Three Ways to Use Frank
 
 ### Option A — AI Agent (recommended, `agent/`)
 
@@ -36,11 +43,11 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). You'll get a unique session URL to share with your team.
 
 **What the agent does that the other options don't:**
-- Enforces the Business Intent gate — refuses to generate epics until all 3 intent questions are answered
+- Enforces the Quick Brief gate — refuses to generate epics until your intent is clear
 - Auto-scores every story using the Value Scoring Matrix (Business Value × User Impact × Feasibility)
 - Persists sessions in Upstash Redis — shareable URL, resumable after closing the browser
 - Exports directly to GitHub Issues — labeled, one per story, with AC and metadata
-- Shows a live backlog sidebar with stage progress as you work
+- Progressive backlog saving — every epic is checkpointed as it's generated; a dropped stream never loses work
 
 See [`agent/README.md`](agent/README.md) for full setup instructions.
 
@@ -53,11 +60,11 @@ If you have this installed as a Copilot skill, open GitHub Copilot Chat and desc
 - *"Create user stories for my project"*
 - *"Plan the development phases"*
 
-Copilot guides you through the same structured BA/PM/PO thinking — entirely in conversation. No files to manage.
+Frank guides you through the same structured thinking — entirely in conversation. No files to manage.
 
 ### Option C — Interactive Scripts (permanent output files)
 
-Run the three Python wizards directly. Each produces `.md` and `.json` output files you can share with your team, import into GitHub Issues, paste into Jira, or hand to a developer.
+Run the three Python wizards directly. Each produces `.md` and `.json` output files you can share, import into GitHub Issues, paste into Jira, or hand to a developer.
 
 ```bash
 python3 scripts/requirements_elicitor.py    # Understand the problem
@@ -76,6 +83,7 @@ python3 scripts/project_planner.py          # Plan the phases
 - **OpenAI API key** (GPT-4o access)
 - **Upstash Redis** account (free tier works)
 - **GitHub Personal Access Token** (for export, `repo` scope)
+- **`ADMIN_SECRET`** — a random 64-char hex string for session recovery (generate with `openssl rand -hex 32`)
 
 ### For the Copilot Skill (Option B)
 - **GitHub Copilot** with agent/skill support enabled
@@ -307,3 +315,15 @@ See the `examples/` folder for complete sample outputs from each script using a 
 ## Support
 
 If something isn't working or you want to suggest an improvement, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Roadmap
+
+| Phase | Status | Highlights |
+|---|---|---|
+| **Alpha** | ✅ Live | Rebrand, stream resilience, route tests, cybersecurity audit |
+| **Beta** | 🔜 Next | Auth (Clerk), billing (Stripe), validation stage, PRD export, Azure DevOps + Jira export |
+| **Production** | 🗓 Planned | Team workspaces, cross-session memory, read-only share links, Linear + GitHub Projects export |
+
+Track individual tasks in [TODO.md](TODO.md).

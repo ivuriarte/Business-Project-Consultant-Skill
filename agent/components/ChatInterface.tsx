@@ -173,6 +173,17 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
             <span className="text-accent text-[10px]">{copied ? '✓' : '⎘'}</span>
           </button>
 
+          {/* Start fresh */}
+          {backlog.stage !== 'welcome' && (
+            <button
+              onClick={() => { window.location.href = '/'; }}
+              title="Start a new session"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-transparent hover:bg-surface-2 border border-border/60 text-text-muted hover:text-text-primary text-[11px] font-mono transition-colors"
+            >
+              + New
+            </button>
+          )}
+
           {/* Export */}
           {hasBacklog && (
             <ExportButton sessionId={sessionId} projectName={backlog.project?.name} />
@@ -304,7 +315,7 @@ function WelcomeScreen({ onSelect }: { onSelect: (text: string) => void }) {
           Hi, I'm <span className="text-agent-violet">Frank</span>
         </h1>
         <p className="text-text-muted text-sm mt-2 max-w-xs leading-relaxed">
-          Your AI Business &amp; Project Consultant. I turn raw ideas into developer-ready backlogs.
+          From idea to backlog in minutes. No BA or PM experience required.
         </p>
       </div>
 

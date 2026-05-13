@@ -81,9 +81,15 @@ export async function appendEpics(id: string, epics: Epic[]): Promise<void> {
 }
 
 export async function addTokenUsage(id: string, tokens: number): Promise<void> {
-  const session = await getSession(id);
+  const session = await getSession(id); // 1 read
   if (!session) return;
-  await updateSession(id, { tokens_used: (session.tokens_used ?? 0) + tokens });
+  // Direct SET avoids the extra getSession() inside updateSession (3 round-trips → 2).
+  const updated: AgentSession = {
+    ...session,
+    tokens_used: (session.tokens_used ?? 0) + tokens,
+    updated_at: new Date().toISOString(),
+  };
+  await redis.set(`${SESSION_PREFIX}${id}`, updated, { ex: SESSION_TTL_SECONDS });
 }
 
 export async function deleteSession(id: string): Promise<void> {

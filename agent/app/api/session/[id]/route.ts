@@ -3,6 +3,17 @@ import type { Stage } from '@/lib/types';
 
 export const runtime = 'edge';
 
+/** Constant-time string comparison — prevents timing-oracle attacks on the admin secret. */
+function constantTimeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  if (aBytes.length !== bBytes.length) return false;
+  let diff = 0;
+  for (let i = 0; i < aBytes.length; i++) diff |= aBytes[i] ^ bBytes[i];
+  return diff === 0;
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -44,7 +55,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret || req.headers.get('X-Admin-Secret') !== adminSecret) {
+  const providedSecret = req.headers.get('X-Admin-Secret') ?? '';
+  if (!adminSecret || !constantTimeEqual(providedSecret, adminSecret)) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

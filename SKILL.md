@@ -1,36 +1,44 @@
 ---
-name: business-project-consultant
-description: 'Full-stack Business, Product, and Project Consultant. Merges BA, PM, and PO capabilities to take a raw idea (CEO-level) and produce structured requirements, a prioritized backlog (Epic -> User Story -> Acceptance Criteria), development phases, key documents, and high-value copy-paste prompts ready for developers. Also available as a standalone AI Agent web app (agent/) with GitHub Issues export and shareable session links. WHEN: help me define my app idea, turn this into a backlog, write requirements, create user stories, plan development phases, BRD, functional requirements, acceptance criteria, what should I build first, scope my project, create a roadmap, I have an idea, break this down for developers, give me a prompt to build, project phases, MVP scope.'
+name: frank-ai-product-strategist
+description: 'Frank — AI Product Strategist. From idea to backlog in minutes. Takes a raw idea and produces structured epics, prioritized user stories, acceptance criteria, value scores, and developer-ready prompts. Available as a standalone AI Agent web app (agent/) with GitHub Issues export and shareable session links. WHEN: help me define my app idea, turn this into a backlog, write requirements, create user stories, plan development phases, BRD, functional requirements, acceptance criteria, what should I build first, scope my project, create a roadmap, I have an idea, break this down for developers, give me a prompt to build, project phases, MVP scope, from idea to backlog.'
 license: MIT
 metadata:
-  version: 2.0.0
+  version: 3.0.0
   author: Ian Vince
-  category: consulting
-  domain: business-analysis, product-management, project-management
-  updated: 2026-05-10
+  category: product-strategy
+  domain: product-management, backlog-generation, requirements-engineering
+  updated: 2026-05-14
   python-tools: idea_to_backlog.py, requirements_elicitor.py, project_planner.py
   agent: agent/ (Next.js + GPT-4o + Upstash Redis)
   frameworks: MoSCoW, INVEST, SMART, Kano, Jobs-to-be-Done, Value-Effort Matrix
 ---
 
-# Business and Project Consultant
+# Frank — AI Product Strategist
 
-A single agent that gives developers without BA, PM, or PO experience the full structured thinking they need — from a raw idea to a developer-ready backlog, phased plan, and actionable prompts.
+> From idea to backlog in minutes.
+
+A single agent that gives founders and developers the structured thinking they need before they write a single line of code — from a raw idea to a developer-ready backlog, prioritized by value, ready for GitHub export.
 
 ## Keywords
-business analyst, product manager, product owner, BA, PM, PO, requirements, backlog, epics, user stories, acceptance criteria, BRD, FRS, functional requirements, business requirements, project plan, development phases, MVP, roadmap, scope, stakeholder, feasibility, gap analysis, process flow, as-is to-be, elicitation, MoSCoW, prioritization, idea to features, app planning, developer prompts, copy-paste prompts, structured backlog, high-value prompt, greatest value
+product strategist, AI product manager, backlog generator, idea to backlog, Frank, epics, user stories, acceptance criteria, requirements, product backlog, MoSCoW prioritization, value score, greatest value prompt, GitHub Issues export, session persistence, developer prompts, MVP scope, product roadmap, structured thinking, BA, PM, PO, idea intake, product planning
 
 ---
 
 ## Quick Start
 
-### Mode 1 — Idea Intake & Backlog Generation
-```bash
-python3 scripts/idea_to_backlog.py
-```
-Interactive wizard. Takes your raw idea, asks clarifying questions, then outputs a full prioritized backlog (Epics → Stories → AC) with copy-paste developer prompts.
+### Mode 1 — AI Agent (Recommended)
 
-### Mode 2 — Requirements Elicitation
+The primary interface. A full web application — no terminal, no Copilot needed.
+
+```bash
+cd agent
+cp .env.local.example .env.local   # fill in OpenAI + Upstash + ADMIN_SECRET
+npm install && npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). See [`agent/README.md`](agent/README.md) for full setup.
+
+### Mode 2 — Idea Intake & Backlog Generation (CLI)
 ```bash
 python3 scripts/requirements_elicitor.py
 ```

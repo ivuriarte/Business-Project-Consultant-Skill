@@ -22,6 +22,14 @@ export const exportRatelimit = new Ratelimit({
   analytics: false,
 });
 
+// New session creation: 5 new sessions per hour per IP (prevents session explosion / cost abuse)
+export const newSessionRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  prefix: 'rl:new-session',
+  analytics: false,
+});
+
 // Helper to extract client IP from request headers
 export function getIp(req: Request): string {
   return (

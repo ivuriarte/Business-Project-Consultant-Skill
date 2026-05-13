@@ -219,6 +219,9 @@ export function ExportButton({ sessionId, projectName }: ExportButtonProps) {
                     <p className="text-[10px] text-text-muted mt-1">
                       Needs <code className="text-accent bg-accent/10 px-1 rounded">issues: write</code> scope
                     </p>
+                    <p className="text-[10px] text-success/80 mt-1 flex items-center gap-1">
+                      <span>🔒</span> Your token is never stored — used for this request only.
+                    </p>
                   </div>
 
                   {status === 'error' && (

@@ -1,9 +1,43 @@
 # Changelog
 
-All notable changes to the Business and Project Consultant skill are documented here.
+All notable changes to Frank — AI Product Strategist are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  
 Versioning follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+
+---
+
+## [3.0.0] — 2026-05-14
+
+### Changed — Rebrand: "Business & Project Consultant" → Frank
+
+- **Product identity**: Renamed from "Business and Project Consultant" to **Frank — AI Product Strategist**. New tagline: *"From idea to backlog in minutes."* All UI surfaces, documentation, and repository metadata updated.
+- **layout.tsx**: Title and `<meta description>` updated to new brand and tagline.
+- **SKILL.md**: Description, keywords, category, and version updated to reflect Frank's identity and drop the BA/PM/PO framing.
+- **README.md**: Full rewrite — new positioning, updated requirements (added `ADMIN_SECRET`), roadmap section added.
+- **SECURITY.md**: Rewritten to cover the live AI agent's security model. The old "no network calls" statement is retired.
+- **CONTRIBUTING.md**: Updated for agent-first development; TypeScript/Next.js contribution guidelines added alongside the original Python script guidelines.
+
+### Added — Stream Resilience + Session Recovery (Technical, part of v4 internal release)
+- **`save_checkpoint` tool** (`app/api/chat/route.ts`): Progressive epic checkpointing. The agent calls `save_checkpoint` after completing each Epic during backlog generation — a mid-stream disconnect no longer loses completed work. Calls `appendEpics` in the Redis layer.
+- **`appendEpics` function** (`lib/redis.ts`): New Redis function for incremental epic persistence without a full session overwrite.
+- **PATCH `/api/session/[id]`** (`app/api/session/[id]/route.ts`): Admin recovery endpoint. Accepts `X-Admin-Secret` header + `{ stage, clearEpics }` body. Allows manually unsticking a session locked in the wrong stage. Validates against `ADMIN_SECRET` env var.
+- **`maxSteps` raised to 10** (`app/api/chat/route.ts`): Allows the agent to call `save_checkpoint` multiple times (one per Epic) before calling `persist_backlog`.
+
+### Added — Route Integration Tests
+- **`__tests__/routes/chat.test.ts`**: 8 tests — session validation, rate limiting, token cap, valid stream, fail-open.
+- **`__tests__/routes/export.test.ts`**: 10 tests — field validation, session lookup, rate limiting, GitHub API failure, success.
+- **`__tests__/routes/session.test.ts`**: 15 tests — GET, DELETE, PATCH (admin auth, stage validation, clearEpics). Total: **45 tests across 4 files**.
+
+### Added — Monitoring + Reliability
+- **Smoke test Slack alert** (`.github/workflows/smoke-test.yml`): If `SLACK_WEBHOOK_URL` is set as a GitHub secret, a POST is sent to the webhook on any production smoke test failure. Skips gracefully if the secret is absent.
+- **Structured `warn` on `onFinish` token failure** (`app/api/chat/route.ts`): Token tracking failures now emit `{ event: 'token_tracking_failed', error }` rather than failing silently.
+
+### Fixed
+- **`appendMessages` Redis round-trips** (`lib/redis.ts`): Reduced from 3 to 2 round-trips. Direct `SET` replaces the old `getSession + updateSession` pattern.
+- **`prompt_version` documented as forensic-only** (`lib/types.ts`): Comment updated — `buildSystemPrompt` does not branch on this value. It is recorded for audit trail purposes only.
+- **CSP `connect-src` comment** (`next.config.ts`): Explains why `self` + `va.vercel-insights.com` is correct — OpenAI calls are Edge server-side and do not appear in browser CSP.
+- **CI lint gate enforced** (`.github/workflows/ci.yml`): `--max-warnings 0` flag added; `npm test` step added. Failing tests now block the build.
 
 ---
 

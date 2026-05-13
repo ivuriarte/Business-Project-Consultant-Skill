@@ -1,15 +1,17 @@
-# Idea → Agent
+# Frank — From Idea to Backlog in Minutes
 
-Transform a raw idea into a developer-ready backlog — guided by an AI that enforces Business Analysis best practices.
+> The AI that structures your thinking before you build.  
+> Structured epics. Prioritized stories. Developer-ready output. GitHub export included.
 
 ## What it does
 
-1. **Hard-gates the Business Intent questions** — no epics until you answer why, who, and what you're assuming
+1. **Hard-gates the Quick Brief** — no epics until you answer why, who, and what you're assuming
 2. **Guides a 5-step Idea Intake Protocol** — problem statement, target user, success metrics, scope box, constraints
 3. **Auto-generates a prioritized backlog** — Epics → User Stories → Acceptance Criteria with auto-computed value scores
-4. **Produces the Greatest Value Prompt** — a copy-paste developer prompt for the highest-impact story
-5. **Exports to GitHub Issues** — one issue per user story with labels, AC, metadata
-6. **Persistent sessions** — every session gets a shareable URL; reload anytime
+4. **Progressive backlog saving** — each Epic is checkpointed as it's generated; a dropped connection never loses completed work
+5. **Produces the Greatest Value Prompt** — a copy-paste developer prompt for the highest-impact story
+6. **Exports to GitHub Issues** — one issue per user story with labels, AC, metadata
+7. **Persistent sessions** — every session gets a shareable URL; reload anytime
 
 ## Tech Stack
 
@@ -42,6 +44,7 @@ Fill in `.env.local`:
 | `UPSTASH_REDIS_REST_URL` | [console.upstash.com](https://console.upstash.com) → Create Database → REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Same page → REST Token |
 | `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000` for dev, your domain for prod |
+| `ADMIN_SECRET` | Run `openssl rand -hex 32` — used for the session recovery PATCH endpoint |
 | `GITHUB_TOKEN` | Optional server-side token — users can also enter theirs in the UI |
 
 ### 3. Run locally
@@ -55,7 +58,7 @@ Open [http://localhost:3000](http://localhost:3000). Your session URL will look 
 ## Usage
 
 1. **Describe your idea** in the chat (rough is fine)
-2. **Answer the 3 Business Intent Questions** — the agent enforces this gate
+2. **Answer the 3 Quick Brief questions** — Frank enforces this gate
 3. **Complete the 5-step intake** — problem, user, success, scope, constraints
 4. **Receive your full backlog** — epics, stories, AC, value scores, Greatest Value Prompt
 5. **Click Export to GitHub** in the top bar — enter your repo and token

@@ -14,6 +14,7 @@ vi.mock('@/lib/redis', () => ({
 
 vi.mock('@/lib/ratelimit', () => ({
   chatRatelimit: { limit: vi.fn().mockResolvedValue({ success: true }) },
+  newSessionRatelimit: { limit: vi.fn().mockResolvedValue({ success: true }) },
   getIp: vi.fn().mockReturnValue('1.2.3.4'),
 }));
 
@@ -32,8 +33,8 @@ vi.mock('@ai-sdk/openai', () => ({
 }));
 
 import { POST } from '../../app/api/chat/route';
-import { getOrCreateSession } from '@/lib/redis';
-import { chatRatelimit } from '@/lib/ratelimit';
+import { getSession, getOrCreateSession } from '@/lib/redis';
+import { chatRatelimit, newSessionRatelimit } from '@/lib/ratelimit';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -63,8 +64,10 @@ function makeRequest(body: object): Request {
 describe('POST /api/chat', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(getOrCreateSession).mockResolvedValue(mockSession);
     vi.mocked(chatRatelimit.limit).mockResolvedValue({ success: true } as never);
+    vi.mocked(newSessionRatelimit.limit).mockResolvedValue({ success: true } as never);
   });
 
   it('returns 400 when sessionId is missing', async () => {
@@ -89,7 +92,9 @@ describe('POST /api/chat', () => {
   });
 
   it('returns 402 when session token limit is reached', async () => {
-    vi.mocked(getOrCreateSession).mockResolvedValue({ ...mockSession, tokens_used: 100_001 });
+    const overLimit = { ...mockSession, tokens_used: 100_001 };
+    vi.mocked(getSession).mockResolvedValue(overLimit);
+    vi.mocked(getOrCreateSession).mockResolvedValue(overLimit);
     const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }], sessionId: VALID_SESSION_ID }));
     expect(res.status).toBe(402);
     const body = await res.json();
@@ -97,7 +102,9 @@ describe('POST /api/chat', () => {
   });
 
   it('returns 402 exactly at the token limit boundary', async () => {
-    vi.mocked(getOrCreateSession).mockResolvedValue({ ...mockSession, tokens_used: 100_000 });
+    const atLimit = { ...mockSession, tokens_used: 100_000 };
+    vi.mocked(getSession).mockResolvedValue(atLimit);
+    vi.mocked(getOrCreateSession).mockResolvedValue(atLimit);
     const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }], sessionId: VALID_SESSION_ID }));
     expect(res.status).toBe(402);
   });
@@ -112,5 +119,21 @@ describe('POST /api/chat', () => {
     const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }], sessionId: VALID_SESSION_ID }));
     // Should still reach streamText, not crash
     expect(res.status).toBe(200);
+  });
+
+  it('returns 429 when new-session creation rate limit is reached', async () => {
+    // Simulate a brand-new session (preCheck returns null)
+    vi.mocked(getSession).mockResolvedValue(null);
+    vi.mocked(newSessionRatelimit.limit).mockResolvedValue({ success: false } as never);
+    const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }], sessionId: VALID_SESSION_ID }));
+    expect(res.status).toBe(429);
+  });
+
+  it('skips new-session rate limit for existing sessions', async () => {
+    // preCheck returns an existing session — newSessionRatelimit should not be called
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(newSessionRatelimit.limit).mockResolvedValue({ success: false } as never); // would block if called
+    const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }], sessionId: VALID_SESSION_ID }));
+    expect(res.status).toBe(200); // existing session bypasses new-session limit
   });
 });
