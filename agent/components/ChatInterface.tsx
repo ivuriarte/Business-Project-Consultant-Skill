@@ -234,7 +234,7 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Describe your idea or answer Frank's question…"
+                placeholder="Describe your idea, or reply to Frank…"
                 rows={1}
                 disabled={isLoading}
                 aria-label="Message input"
@@ -283,9 +283,9 @@ const STAGE_HEADER: Record<string, { label: string; desc: string }> = {
 };
 
 const STARTERS = [
-  { label: 'Invoice tracker for freelancers', text: 'I want to build an app that helps freelancers track invoices automatically.' },
-  { label: 'Farm-to-consumer marketplace',   text: 'I have an idea for a platform where local farmers can sell directly to consumers.' },
-  { label: 'Employee onboarding automation', text: 'I want to automate the employee onboarding process at my company.' },
+  { label: 'Invoice tracker for freelancers',    text: 'I want to build an app that helps freelancers track invoices and get paid faster.' },
+  { label: 'Team knowledge base',               text: "I want to build an internal knowledge base where my team can find answers instantly, without asking Slack." },
+  { label: 'Startup waitlist platform',          text: 'I want to build a waitlist platform that helps startups build buzz and validate demand before launch.' },
 ];
 
 const TEMPLATES = [

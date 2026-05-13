@@ -33,9 +33,9 @@ const STAGE_ORDER: Record<AgentSession['stage'], number> = {
 };
 
 const EXAMPLES = [
-  'I want to build an app that helps freelancers track invoices automatically.',
-  'I have an idea for a platform where local farmers can sell directly to consumers.',
-  'I want to automate the employee onboarding process at my company.',
+  'I want to build a mobile app where parents can track their kids\' after-school activities.',
+  'I have an idea for a SaaS tool that helps small restaurants manage online orders and delivery.',
+  'I want to create a platform that connects musicians with local venues for gigs and bookings.',
 ];
 
 export function BacklogPanel({
@@ -79,17 +79,12 @@ export function BacklogPanel({
               <div className="text-[10px] text-text-muted leading-tight">From idea to backlog in minutes.</div>
             </div>
           </div>
-          {/* AI badge + close */}
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-agent-violet/30 bg-agent-violet/10 text-agent-violet uppercase tracking-wider">
-              AI Agent
-            </span>
-            {onClose && (
-              <button onClick={onClose} className="md:hidden text-text-muted hover:text-text-primary">
-                <CloseIcon />
-              </button>
-            )}
-          </div>
+          {/* Close (mobile) */}
+          {onClose && (
+            <button onClick={onClose} className="md:hidden text-text-muted hover:text-text-primary mt-0.5">
+              <CloseIcon />
+            </button>
+          )}
         </div>
         {/* Share row */}
         <div className="flex items-center justify-between mt-3">
@@ -189,14 +184,14 @@ export function BacklogPanel({
           <div className="px-5 py-6">
             <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-3">About Frank</p>
             <p className="text-xs text-text-secondary leading-relaxed mb-4">
-              Frank turns raw ideas into structured product backlogs — epics, user stories, and prioritised roadmaps — ready to ship to GitHub.
+              Answer 3 questions about your idea. Frank generates structured epics, stories, priorities, and a GitHub-ready export — in minutes.
             </p>
             <div className="space-y-2">
               {[
-                { icon: '🎯', text: 'Strategic requirements elicitation' },
-                { icon: '📋', text: 'Epic & story generation' },
-                { icon: '📊', text: 'MoSCoW prioritisation' },
-                { icon: '🚀', text: 'GitHub Projects export' },
+                { icon: '🎯', text: 'Business intent elicitation (2 min)' },
+                { icon: '📋', text: 'Epics + stories with acceptance criteria' },
+                { icon: '📊', text: 'MoSCoW + value scoring, auto-calculated' },
+                { icon: '🚀', text: 'One-click GitHub Issues export' },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-start gap-2.5">
                   <span className="text-sm shrink-0 mt-px">{icon}</span>
