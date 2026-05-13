@@ -162,18 +162,6 @@ export function BacklogPanel({
             label="Templates"
             onClick={onOpenTemplates}
           />
-          <QuickAction
-            icon={<BacklogIcon />}
-            label="My Backlog"
-            disabled
-            disabledReason="Requires an account — coming soon"
-          />
-          <QuickAction
-            icon={<HistoryIcon />}
-            label="Export History"
-            disabled
-            disabledReason="Requires an account — coming soon"
-          />
         </div>
       </div>
 
@@ -241,11 +229,6 @@ export function BacklogPanel({
         </div>
       )}
 
-      {/* ── Settings footer ───────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-t border-border flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
-        <SettingsIcon />
-        <span className="text-xs">Settings</span>
-      </div>
     </aside>
   );
 }
@@ -370,31 +353,7 @@ function TemplateIcon() {
   );
 }
 
-function BacklogIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M2 4h10M2 7h7M2 10h5" />
-    </svg>
-  );
-}
 
-function HistoryIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="7" cy="7" r="5" />
-      <path d="M7 4.5V7l2 1.5" />
-    </svg>
-  );
-}
-
-function SettingsIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="7" cy="7" r="2" />
-      <path d="M7 1.5v1M7 11.5v1M1.5 7h1M11.5 7h1M3.2 3.2l.7.7M10.1 10.1l.7.7M10.1 3.9l-.7.7M3.9 10.1l-.7.7" />
-    </svg>
-  );
-}
 
 function ShareIcon() {
   return (

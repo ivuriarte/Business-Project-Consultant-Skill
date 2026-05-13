@@ -256,8 +256,6 @@ export function ChatInterface({ sessionId, initialSession }: ChatInterfaceProps)
               />
               {/* Action row */}
               <div className="flex items-center gap-1 px-3 pb-3">
-                <InputAction icon={<AttachIcon />} label="Attach" disabled title="File upload — coming soon" />
-                <InputAction icon={<ContextIcon />} label="Add context" disabled title="Context injection — coming soon" />
                 <InputAction icon={<TemplateSmIcon />} label="Templates" onClick={() => setShowTemplates(v => !v)} />
                 <div className="flex-1" />
                 <button
@@ -457,23 +455,6 @@ function SendIcon() {
   return (
     <svg className="w-4 h-4 text-accent-fg" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 8h12M9 3l5 5-5 5" />
-    </svg>
-  );
-}
-
-function AttachIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M12 6.5L6.5 12a3.5 3.5 0 01-5-5L7 1.5a2 2 0 013 3L4.5 10a.5.5 0 01-.7-.7L9.5 4" />
-    </svg>
-  );
-}
-
-function ContextIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <rect x="2" y="2" width="10" height="10" rx="1.5" />
-      <path d="M5 5h4M5 7h4M5 9h2" />
     </svg>
   );
 }
